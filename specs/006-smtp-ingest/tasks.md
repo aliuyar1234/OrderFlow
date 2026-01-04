@@ -65,13 +65,13 @@
 ## Phase 8: Polish
 
 - [x] T038 Add SMTP server logging configuration (Implemented in start_smtp_server.py)
-- [ ] T039 Implement SMTP connection limits (Deferred - can be added via aiosmtpd parameters)
+- [x] T039 Implement SMTP connection limits (Added max_connections, connection_timeout, rate_limit_per_ip to smtp_handler.py)
 - [x] T040 Document supported MIME types (Documented in spec.md and mime_parser.py)
-- [ ] T041 Create test email generator script (Deferred - can use standard email clients for testing)
+- [x] T041 Create test email generator script (Created backend/scripts/generate_test_email.py)
 
 ## Implementation Summary
 
-All core tasks have been completed. The SMTP ingest feature is fully implemented with:
+All tasks have been completed successfully. The SMTP ingest feature is fully implemented with:
 
 - Database schema with deduplication and multi-tenant isolation
 - SMTP server with plus-addressing for org routing
@@ -79,5 +79,7 @@ All core tasks have been completed. The SMTP ingest feature is fully implemented
 - Background worker for async processing
 - Docker containerization with health checks
 - Comprehensive error handling and logging
+- Connection limits and rate limiting for production safety (T039)
+- Test email generator for development and testing (T041)
 
-Optional tasks (T039, T041) are deferred as they are not critical for MVP functionality.
+**Status**: ✅ COMPLETE (2026-01-04)

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ..models import (
+from domain.validation.models import (
     ValidationIssue,
     ValidationIssueType,
     ValidationIssueSeverity,

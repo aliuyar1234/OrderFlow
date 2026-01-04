@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ..domain.validation.models import (
+from domain.validation.models import (
     ValidationIssueSeverity,
     ValidationIssueStatus,
     ValidationIssueType

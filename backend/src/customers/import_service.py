@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 import logging
 
-from ..models.customer import Customer
-from ..models.customer_contact import CustomerContact
+from models.customer import Customer
+from models.customer_contact import CustomerContact
 from .schemas import ImportResult, AddressSchema
 
 logger = logging.getLogger(__name__)

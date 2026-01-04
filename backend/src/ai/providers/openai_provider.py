@@ -7,14 +7,14 @@ from typing import Any
 
 from openai import OpenAI, APIError, Timeout, RateLimitError
 
-from ..ports import (
+from ports import (
     LLMProviderPort,
     LLMExtractionResult,
     LLMProviderError,
     LLMTimeoutError,
     LLMRateLimitError,
 )
-from ...extraction.prompts import (
+from extraction.prompts import (
     build_text_extraction_prompt,
     build_vision_extraction_prompt,
     build_json_repair_prompt,

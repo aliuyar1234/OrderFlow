@@ -17,12 +17,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from ..database import get_db
-from ..models.document import Document, DocumentStatus
-from ..models.inbound_message import InboundMessage
-from ..auth.dependencies import CurrentUser
-from ..auth.roles import require_role, Role
-from ..domain.documents import (
+from database import get_db
+from models.document import Document, DocumentStatus
+from models.inbound_message import InboundMessage
+from auth.dependencies import CurrentUser
+from auth.roles import require_role, Role
+from domain.documents import (
     is_supported_mime_type,
     validate_file_size,
     validate_filename,
@@ -30,9 +30,9 @@ from ..domain.documents import (
     MAX_FILE_SIZE,
     MAX_BATCH_FILES,
 )
-from ..domain.documents.ports.object_storage_port import ObjectStoragePort
-from ..infrastructure.storage.s3_storage_adapter import S3StorageAdapter
-from ..infrastructure.storage.storage_config import load_storage_config_from_env
+from domain.documents.ports.object_storage_port import ObjectStoragePort
+from infrastructure.storage.s3_storage_adapter import S3StorageAdapter
+from infrastructure.storage.storage_config import load_storage_config_from_env
 from .schemas import (
     UploadResponse,
     UploadedDocumentResponse,

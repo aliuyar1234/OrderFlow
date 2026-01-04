@@ -19,12 +19,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models.inbound_message import (
+from models.inbound_message import (
     InboundMessage,
     InboundMessageSource,
     InboundMessageStatus,
 )
-from ...models.org import Org
+from models.org import Org
 from .mime_parser import parse_mime_message, extract_metadata
 
 logger = logging.getLogger(__name__)

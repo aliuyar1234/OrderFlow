@@ -12,7 +12,7 @@ import logging
 from celery import shared_task
 from typing import Dict, Any
 
-from ..database import SessionLocal
+from database import SessionLocal
 from .service import run_global_retention_cleanup
 
 logger = logging.getLogger(__name__)

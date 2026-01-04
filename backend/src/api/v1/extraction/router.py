@@ -13,10 +13,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from ....auth.dependencies import get_current_user
-from ....database import get_db
-from ....models import ExtractionRun, ExtractionRunStatus, Document, User
-from ....workers.extraction_worker import extract_document_task
+from auth.dependencies import get_current_user
+from database import get_db
+from models import ExtractionRun, ExtractionRunStatus, Document, User
+from workers.extraction_worker import extract_document_task
 from .schemas import (
     ExtractionRunResponse,
     ExtractionRunListResponse,

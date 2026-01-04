@@ -14,12 +14,12 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     Column, String, Text, DateTime, Numeric, Enum as SQLEnum,
-    ForeignKey, Date, Index
+    ForeignKey, Date, Index, Integer
 )
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class DraftOrder(Base):
@@ -74,13 +74,13 @@ class DraftOrder(Base):
 
     # Address data (JSONB for flexibility)
     ship_to_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         default={},
         comment="Shipping address {street, city, postal_code, country}"
     )
     bill_to_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         default={},
         comment="Billing address {street, city, postal_code, country}"
@@ -135,13 +135,13 @@ class DraftOrder(Base):
 
     # Ready check and customer detection results (cached for UI)
     ready_check_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=False,
         default={},
         comment="Ready-check result: {ready: bool, blocking_reasons: [...], warnings: [...]}"
     )
     customer_candidates_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=False,
         default=[],
         comment="Customer detection candidates (UI quick display; canonical source is customer_detection_candidate table)"
@@ -173,6 +173,11 @@ class DraftOrder(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc)
+    )
+    deleted_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Soft delete timestamp - set when draft is cancelled"
     )
 
     # Indexes (see __table_args__)
@@ -252,7 +257,7 @@ class DraftOrderLine(Base):
 
     # Line number (1-indexed, unique within draft)
     line_no = Column(
-        Column.Integer,
+        Integer,
         nullable=False,
         comment="Line number (1-indexed), unique per draft_order"
     )
@@ -324,7 +329,7 @@ class DraftOrderLine(Base):
         comment="Match method: exact_mapping|trigram|embedding|hybrid|manual"
     )
     match_debug_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=False,
         default={},
         comment="Debug info: scores, features, candidate list"
@@ -349,6 +354,11 @@ class DraftOrderLine(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc)
+    )
+    deleted_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Soft delete timestamp - set when parent draft is cancelled"
     )
 
     # Indexes

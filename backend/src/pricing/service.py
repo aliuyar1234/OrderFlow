@@ -13,7 +13,7 @@ from uuid import UUID
 from datetime import date
 from decimal import Decimal
 
-from ..models.customer_price import CustomerPrice
+from models.customer_price import CustomerPrice
 
 
 class PriceService:

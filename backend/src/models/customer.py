@@ -1,11 +1,11 @@
 """Customer SQLAlchemy model"""
 
-from sqlalchemy import Column, Text, ForeignKey, Boolean
-from sqlalchemy.dialects.postgresql import UUID, CITEXT, TIMESTAMP, JSONB
+from sqlalchemy import Column, Text, ForeignKey, Boolean, Index
+from sqlalchemy.dialects.postgresql import UUID, CITEXT, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class Customer(Base):
@@ -16,6 +16,10 @@ class Customer(Base):
     addresses stored as JSONB.
     """
     __tablename__ = "customer"
+    __table_args__ = (
+        Index("ix_customer_org_id", "org_id"),
+        Index("ix_customer_org_erp_number", "org_id", "erp_customer_number"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     org_id = Column(UUID(as_uuid=True), ForeignKey("org.id", ondelete="RESTRICT"), nullable=False)
@@ -24,8 +28,8 @@ class Customer(Base):
     email = Column(CITEXT, nullable=True)
     default_currency = Column(Text, nullable=False)
     default_language = Column(Text, nullable=False)
-    billing_address = Column(JSONB, nullable=True)
-    shipping_address = Column(JSONB, nullable=True)
+    billing_address = Column(PortableJSONB, nullable=True)
+    shipping_address = Column(PortableJSONB, nullable=True)
     notes = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False, server_default="true")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))

@@ -16,12 +16,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
 
-from ..database import get_db
-from ..dependencies import get_org_id
-from ..auth.dependencies import get_current_user, require_role
-from ..auth.roles import UserRole
-from ..models.user import User
-from ..models.org import Org
+from database import get_db
+from dependencies import get_org_id
+from auth.dependencies import get_current_user, require_role
+from auth.roles import UserRole
+from models.user import User
+from models.org import Org
 from .schemas import OrgSettings, OrgSettingsUpdate
 
 

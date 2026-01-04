@@ -1,11 +1,11 @@
 """ERPPushLog model - Push attempt history and debugging"""
 
 from sqlalchemy import Column, Text, ForeignKey, Integer, text, Index, CheckConstraint
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class ERPPushLog(Base):
@@ -36,6 +36,12 @@ class ERPPushLog(Base):
         nullable=True,
         comment="Reference to draft_order (nullable for connection tests)"
     )
+    connection_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("erp_connection.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Reference to ERP connection used for this push"
+    )
     connector_type = Column(
         Text,
         nullable=False,
@@ -47,12 +53,12 @@ class ERPPushLog(Base):
         comment="Push status: SUCCESS, FAILED, PENDING, RETRYING"
     )
     request_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         comment="Full request payload sent to connector"
     )
     response_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         comment="Full response received from connector"
     )
@@ -79,6 +85,11 @@ class ERPPushLog(Base):
         comment="Total time taken for push operation in milliseconds"
     )
     created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("NOW()")
+    )
+    updated_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
         server_default=text("NOW()")

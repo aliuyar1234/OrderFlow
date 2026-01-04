@@ -7,7 +7,7 @@
 
 - [x] T001 Create extraction domain at `backend/src/domain/extraction/`
 - [x] T002 Create extractor ports at `backend/src/domain/extraction/ports/`
-- [ ] T003 Add openpyxl, pandas to `backend/requirements/base.txt`
+- [x] T003 Add openpyxl, pandas to `backend/requirements/base.txt`
 - [x] T004 Create extraction workers at `backend/src/workers/`
 
 ## Phase 2: Canonical Output Schema
@@ -46,21 +46,21 @@
 
 ## Phase 6: [US2] Extract Data from Text-Based PDF
 
-- [ ] T027 [US2] Create PDFTextExtractor at `backend/src/infrastructure/extraction/pdf_text_extractor.py`
-- [ ] T028 [US2] Extract text using pdfplumber or PyPDF2
-- [ ] T029 [US2] Calculate text_coverage_ratio
-- [ ] T030 [US2] Store extracted text in object storage
-- [ ] T031 [US2] Detect table structures in PDF text
-- [ ] T032 [US2] Extract header information from first pages
+- [x] T027 [US2] Create PDFTextExtractor at `backend/src/infrastructure/extractors/pdf_text_extractor.py`
+- [x] T028 [US2] Extract text using pdfplumber
+- [x] T029 [US2] Calculate text_coverage_ratio
+- [x] T030 [US2] Store extracted text in object storage
+- [x] T031 [US2] Detect table structures in PDF text
+- [x] T032 [US2] Extract header information from first pages
 
 ## Phase 7: [US3] ExtractorPort Interface
 
 - [x] T033 [US3] Create ExtractorRegistry class
 - [x] T034 [US3] Implement register method
 - [x] T035 [US3] Implement get_extractor method (by MIME type)
-- [ ] T036 [US3] Register ExcelExtractor in global registry (Note: requires app initialization)
-- [ ] T037 [US3] Register CSVExtractor in global registry (Note: requires app initialization)
-- [ ] T038 [US3] Register PDFTextExtractor in global registry (Note: PDF extractor not implemented)
+- [x] T036 [US3] Register ExcelExtractor in global registry
+- [x] T037 [US3] Register CSVExtractor in global registry
+- [x] T038 [US3] Register PDFTextExtractor in global registry
 
 ## Phase 8: [US4] Extraction Confidence Calculation
 
@@ -73,9 +73,9 @@
 ## Phase 9: [US5] Canonical Extraction Output Schema
 
 - [x] T044 [US5] Validate all extractor outputs against canonical schema
-- [ ] T045 [US5] Test schema with Excel output (Note: requires tests)
-- [ ] T046 [US5] Test schema with CSV output (Note: requires tests)
-- [ ] T047 [US5] Test schema with PDF output (Note: PDF extractor not implemented)
+- [x] T045 [US5] Test schema with Excel output
+- [x] T046 [US5] Test schema with CSV output
+- [x] T047 [US5] Test schema with PDF output
 - [x] T048 [US5] Handle extra fields (allow but ignore)
 
 ## Phase 10: Extraction Worker
@@ -97,7 +97,7 @@
 - [x] T060 Add extraction timeout (5 minutes) (Note: handled via Celery task timeout)
 - [x] T061 Add extraction metrics logging
 - [x] T062 Create decimal parsing utilities
-- [ ] T063 Create date parsing utilities (Note: basic date handling in ExcelExtractor)
+- [x] T063 Create date parsing utilities
 - [x] T064 Document canonical schema
 
 ## Phase 12: API Endpoints (Added)

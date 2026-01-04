@@ -84,7 +84,7 @@ def validate_filename(filename: str) -> Tuple[bool, Optional[str]]:
     Validation rules:
     - Not empty
     - Max 255 characters
-    - No path traversal (../, ..\)
+    - No path traversal (../, ..\\)
     - No null bytes
     - Contains valid characters
 

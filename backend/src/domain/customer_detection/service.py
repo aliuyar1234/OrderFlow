@@ -11,8 +11,8 @@ from uuid import UUID
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from backend.src.models.customer import Customer
-from backend.src.models.customer_contact import CustomerContact
+from models.customer import Customer
+from models.customer_contact import CustomerContact
 from .models import DetectionResult, Candidate, DetectionSignal
 from .signal_extractor import SignalExtractor
 

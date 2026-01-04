@@ -76,7 +76,12 @@ class TestSearchQueryInjection:
 
             if response.status_code == 200:
                 # Should return empty or safe results, never all customers
-                results = response.json()
+                data = response.json()
+                # Handle paginated response {"items": [...], ...}
+                if isinstance(data, dict) and "items" in data:
+                    results = data["items"]
+                else:
+                    results = data
                 assert isinstance(results, list)
                 # Should not return more results than exist
                 assert len(results) <= 1
@@ -95,7 +100,7 @@ class TestSearchQueryInjection:
             org_id=test_org.id,
             internal_sku="SKU-001",
             name="Widget",
-            default_uom="EA"
+            base_uom="EA"
         )
         db_session.add(product)
         db_session.commit()
@@ -153,7 +158,12 @@ class TestFilterInjection:
         assert response.status_code in [200, 400, 422]
 
         if response.status_code == 200:
-            results = response.json()
+            data = response.json()
+            # Handle paginated response {"items": [...], ...}
+            if isinstance(data, dict) and "items" in data:
+                results = data["items"]
+            else:
+                results = data
             # Should not return all customers
             assert len(results) <= 1
 
@@ -168,7 +178,7 @@ class TestFilterInjection:
 
         # SQL injection in date filter
         response = client.get(
-            "/api/v1/drafts?created_after=2024-01-01' OR '1'='1",
+            "/api/v1/draft-orders?created_after=2024-01-01' OR '1'='1",
             headers={"Authorization": f"Bearer {token}"}
         )
 

@@ -4,13 +4,13 @@ Document represents uploaded/attached files (PDF, Excel, CSV).
 Tracks storage location, processing status, and file metadata.
 """
 
-from sqlalchemy import Column, Text, ForeignKey, BigInteger, Integer, Numeric, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
+from sqlalchemy import Column, Text, ForeignKey, BigInteger, Integer, Numeric, Enum as SQLEnum, Index
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 import enum
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class DocumentStatus(str, enum.Enum):
@@ -34,6 +34,10 @@ class Document(Base):
     with SHA256 hash for deduplication. Processing status tracks extraction.
     """
     __tablename__ = "document"
+    __table_args__ = (
+        Index("ix_document_org_id", "org_id"),
+        Index("ix_document_org_sha256", "org_id", "sha256"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     org_id = Column(UUID(as_uuid=True), ForeignKey("org.id", ondelete="RESTRICT"), nullable=False)
@@ -57,7 +61,7 @@ class Document(Base):
     layout_fingerprint = Column(Text, nullable=True)  # SHA256 of layout structure (§5.4.6)
     page_count = Column(Integer, nullable=True)
     text_coverage_ratio = Column(Numeric(4, 3), nullable=True)  # 0..1 for PDF text coverage
-    error_json = Column(JSONB, nullable=True)  # Error details if status=FAILED
+    error_json = Column(PortableJSONB, nullable=True)  # Error details if status=FAILED
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
 

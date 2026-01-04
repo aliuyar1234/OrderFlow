@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
-from ..database import get_db
+from database import get_db
 from .health import (
     check_database_health,
     check_redis_health,

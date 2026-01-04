@@ -15,15 +15,15 @@ Usage:
         return {"message": "Admin access granted"}
 """
 
-from typing import Callable
+from typing import Callable, Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from uuid import UUID
 import jwt
 
-from ..database import get_db
-from ..models.user import User
+from database import get_db
+from models.user import User
 from .jwt import decode_token
 from .roles import UserRole, has_permission
 
@@ -206,3 +206,7 @@ def get_current_ops_or_higher(current_user: User = Depends(require_role(UserRole
             ...
     """
     return current_user
+
+
+# Type alias for dependency injection
+CurrentUser = Annotated[User, Depends(get_current_user)]

@@ -15,8 +15,8 @@ from celery import shared_task
 from sqlalchemy.orm import Session
 
 from .base import BaseTask, validate_org_id, get_scoped_session
-from ..models import Document, DocumentStatus, ExtractionRun, ExtractionRunStatus
-from ..infrastructure.extractors import get_global_registry
+from models import Document, DocumentStatus, ExtractionRun, ExtractionRunStatus
+from infrastructure.extractors import get_global_registry
 
 logger = logging.getLogger(__name__)
 

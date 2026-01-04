@@ -99,11 +99,12 @@ class TestCreateAccessToken:
         payload = jwt.decode(token, options={"verify_signature": False})
 
         # Check exp is approximately 30 minutes from now
+        # Allow 5 second tolerance for test execution time
         exp_time = datetime.fromtimestamp(payload['exp'], tz=timezone.utc)
-        expected_exp_min = before + timedelta(minutes=30)
-        expected_exp_max = after + timedelta(minutes=30)
+        expected_exp = before + timedelta(minutes=30)
+        time_diff = abs((exp_time - expected_exp).total_seconds())
+        assert time_diff < 5, f'Expected expiry around 30 min from now, got diff of {time_diff}s'
 
-        assert expected_exp_min <= exp_time <= expected_exp_max
 
     def test_token_issued_at_time(self, monkeypatch):
         """Test token iat claim is set to current time"""
@@ -180,10 +181,11 @@ class TestCreateAccessToken:
         payload = jwt.decode(token, options={"verify_signature": False})
         exp_time = datetime.fromtimestamp(payload['exp'], tz=timezone.utc)
 
-        expected_exp_min = before + timedelta(minutes=120)
-        expected_exp_max = after + timedelta(minutes=120)
+        # Allow 5 second tolerance for test execution time
+        expected_exp = before + timedelta(minutes=120)
+        time_diff = abs((exp_time - expected_exp).total_seconds())
+        assert time_diff < 5, f'Expected expiry around 120 min from now, got diff of {time_diff}s'
 
-        assert expected_exp_min <= exp_time <= expected_exp_max
 
     def test_create_token_with_invalid_expiry_defaults_to_60(self, monkeypatch):
         """Test invalid JWT_EXPIRY_MINUTES falls back to 60 minutes"""

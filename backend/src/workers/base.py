@@ -93,8 +93,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from celery import Task
 
-from ..database import org_scoped_session, SessionLocal
-from ..models.org import Org
+from database import org_scoped_session, SessionLocal
+from models.org import Org
 
 
 def validate_org_id(org_id: str) -> UUID:
@@ -219,7 +219,7 @@ from uuid import UUID
 from typing import Dict, Any
 
 from .base import BaseTask, validate_org_id, get_scoped_session
-from ..models import MyModel
+from models import MyModel
 
 
 @shared_task(base=BaseTask, bind=True)

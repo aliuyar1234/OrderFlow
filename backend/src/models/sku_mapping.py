@@ -3,7 +3,7 @@
 SSOT Reference: §5.4.12 (sku_mapping table schema)
 """
 
-from sqlalchemy import Column, Text, ForeignKey, Integer, Numeric
+from sqlalchemy import Column, Text, ForeignKey, Integer, Numeric, Index
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
@@ -27,6 +27,10 @@ class SkuMapping(Base):
     SSOT Reference: §5.4.12, §7.10.1 (Confirmed Mappings)
     """
     __tablename__ = "sku_mapping"
+    __table_args__ = (
+        Index("ix_sku_mapping_org_id", "org_id"),
+        Index("ix_sku_mapping_org_customer", "org_id", "customer_id"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     org_id = Column(UUID(as_uuid=True), ForeignKey("org.id", ondelete="RESTRICT"), nullable=False)

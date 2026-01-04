@@ -8,11 +8,11 @@ SSOT Reference: §5.4.5 (inbound_message table), §5.2.2 (InboundMessageStatus)
 
 from enum import Enum
 from sqlalchemy import Column, String, Text, CheckConstraint, Index, text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP, CITEXT
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, CITEXT
 from sqlalchemy.orm import validates, relationship
 from datetime import datetime
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class InboundMessageSource(str, Enum):
@@ -135,7 +135,7 @@ class InboundMessage(Base):
 
     # Error tracking (JSONB for structured error data)
     error_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True
     )
 
@@ -153,6 +153,10 @@ class InboundMessage(Base):
         Index('idx_inbound_org_received', 'org_id', 'received_at'),
         Index('idx_inbound_org_status', 'org_id', 'status'),
     )
+
+    # Relationships
+    org = relationship("Org", back_populates="inbound_messages")
+    documents = relationship("Document", back_populates="inbound_message")
 
     @validates('status')
     def validate_status_transition(self, key, new_status):

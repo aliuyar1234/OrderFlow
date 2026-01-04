@@ -16,14 +16,14 @@ from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 from typing import List
 
-from ..database import get_db
-from ..models.user import User
-from ..models.org import Org
-from ..auth.dependencies import require_role
-from ..auth.roles import UserRole
-from ..auth.password import hash_password
-from ..auth.password_policy import check_password_strength, PasswordValidationError
-from ..audit.service import log_from_request
+from database import get_db
+from models.user import User
+from models.org import Org
+from auth.dependencies import require_role
+from auth.roles import UserRole
+from auth.password import hash_password
+from auth.password_policy import check_password_strength, PasswordValidationError
+from audit.service import log_from_request
 from .schemas import UserCreate, UserUpdate, UserResponse, UserListResponse
 
 

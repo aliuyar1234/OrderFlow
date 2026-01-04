@@ -9,7 +9,7 @@ SSOT Reference: §7.5.1 (Provider Interface)
 
 from typing import Optional
 
-from ...domain.ai.ports import (
+from domain.ai.ports import (
     LLMProviderPort,
     LLMExtractionResult,
     LLMServiceError

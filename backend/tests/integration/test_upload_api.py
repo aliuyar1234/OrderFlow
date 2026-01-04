@@ -17,8 +17,8 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from backend.src.models.document import Document, DocumentStatus
-from backend.src.models.inbound_message import InboundMessage
+from models.document import Document, DocumentStatus
+from models.inbound_message import InboundMessage
 
 
 class TestUploadAPI:

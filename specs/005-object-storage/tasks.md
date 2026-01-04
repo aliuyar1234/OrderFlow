@@ -74,4 +74,4 @@
 - [x] T046 Create storage adapter factory for dependency injection (get_storage_adapter in router)
 - [x] T047 Add storage operation logging (storage_key, size, duration)
 - [x] T048 Document storage key format and deduplication strategy (README.md)
-- [ ] T049 Create moto-based tests for S3 adapter (deferred - test skeleton in README)
+- [x] T049 Create moto-based tests for S3 adapter

@@ -6,7 +6,7 @@ This module implements hybrid SKU matching combining:
 - Vector embeddings (pgvector)
 - UoM and price penalties
 
-SSOT Reference: §7.7 (Hybrid Search), §7.10 (Learning Loop)
+SSOT Reference: Section 7.7 (Hybrid Search), Section 7.10 (Learning Loop)
 """
 
 from .ports import MatcherPort, MatchInput, MatchResult, MatchCandidate, MatcherError

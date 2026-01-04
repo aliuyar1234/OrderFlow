@@ -7,7 +7,7 @@ from uuid import UUID
 import re
 
 # Import settings schemas from tenancy module
-from ..tenancy.schemas import (
+from tenancy.schemas import (
     OrgSettings,
     MatchingSettings,
     CustomerDetectionSettings,

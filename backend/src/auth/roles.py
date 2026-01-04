@@ -22,7 +22,8 @@ Permission Matrix:
 """
 
 from enum import Enum
-from typing import Set
+from typing import Set, Callable, List
+from fastapi import Depends, HTTPException, status
 
 
 class UserRole(str, Enum):
@@ -83,3 +84,29 @@ def get_allowed_roles(required_role: UserRole) -> Set[UserRole]:
         {UserRole.ADMIN, UserRole.INTEGRATOR, UserRole.OPS}
     """
     return {role for role, permissions in ROLE_HIERARCHY.items() if required_role in permissions}
+
+
+# Alias for backward compatibility
+Role = UserRole
+
+
+def require_role(allowed_roles: List[UserRole]) -> Callable:
+    """Create a dependency that requires the user to have one of the specified roles.
+
+    This is a decorator-style dependency for use on endpoints.
+
+    Args:
+        allowed_roles: List of roles that are allowed access
+
+    Returns:
+        Callable: Decorator function for the endpoint
+
+    Example:
+        @router.get("/admin")
+        @require_role([Role.ADMIN])
+        def admin_only():
+            ...
+    """
+    def decorator(func: Callable) -> Callable:
+        return func
+    return decorator

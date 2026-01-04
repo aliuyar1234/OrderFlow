@@ -24,40 +24,40 @@ from sqlalchemy.exc import SQLAlchemyError
 from pydantic import ValidationError
 
 # Observability
-from .observability.logging_config import configure_logging
-from .observability.middleware import RequestIDMiddleware
-from .observability.router import router as observability_router
+from observability.logging_config import configure_logging
+from observability.middleware import RequestIDMiddleware
+from observability.router import router as observability_router
 
 # Authentication & Authorization
-from .auth.router import router as auth_router
-from .users.router import router as users_router
+from auth.router import router as auth_router
+from users.router import router as users_router
 
 # Tenancy
-from .tenancy.router import router as tenancy_router
-from .tenancy.middleware import TenantContextMiddleware
+from tenancy.router import router as tenancy_router
+from tenancy.middleware import TenantContextMiddleware
 
 # Domain Routers
-from .customers.router import router as customers_router
-from .customers.router import import_router as customer_import_router
-from .catalog.router import router as products_router
-from .inbox.router import router as inbox_router
-from .uploads.router import router as uploads_router
-from .draft_orders.router import router as draft_orders_router
-from .draft_orders.router_approve import router as draft_orders_approve_router
-from .pricing.router import router as pricing_router
-from .matching.router import router as matching_router
-from .audit.router import router as audit_router
-from .retention.router import router as retention_router
+from customers.router import router as customers_router
+from customers.router import import_router as customer_import_router
+from catalog.router import router as products_router
+from inbox.router import router as inbox_router
+from uploads.router import router as uploads_router
+from draft_orders.router import router as draft_orders_router
+from draft_orders.router_approve import router as draft_orders_approve_router
+from pricing.router import router as pricing_router
+from matching.router import router as matching_router
+from audit.router import router as audit_router
+from retention.router import router as retention_router
 
 # API v1 Routers
-from .api.v1.documents.router import router as documents_router
-from .api.v1.extraction.router import router as extraction_router
-from .api.v1.validation.router import router as validation_router
-from .api.v1.customer_detection.routes import router as customer_detection_router
+from api.v1.documents.router import router as documents_router
+from api.v1.extraction.router import router as extraction_router
+from api.v1.validation.router import router as validation_router
+from api.v1.customer_detection.routes import router as customer_detection_router
 
 # Feedback & Analytics
-from .feedback.endpoints import router as feedback_router
-from .feedback.analytics import router as analytics_router
+from feedback.endpoints import router as feedback_router
+from feedback.analytics import router as analytics_router
 
 # Configure logging
 configure_logging(

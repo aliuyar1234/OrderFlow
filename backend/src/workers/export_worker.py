@@ -15,14 +15,14 @@ from celery import shared_task
 from sqlalchemy.orm import Session
 
 from .base import BaseTask, validate_org_id, get_scoped_session
-from ..models.draft_order import DraftOrder
-from ..models.erp_export import ERPExport, ERPExportStatus
-from ..models.erp_connection import ERPConnection
-from ..models.org import Org
-from ..draft_orders.status import DraftOrderStatus
-from ..audit.service import log_audit_event
-from ..domain.connectors.ports.erp_connector_port import ERPConnectorPort
-from ..infrastructure.encryption import decrypt_config
+from models.draft_order import DraftOrder
+from models.erp_export import ERPExport, ERPExportStatus
+from models.erp_connection import ERPConnection
+from models.org import Org
+from draft_orders.status import DraftOrderStatus
+from audit.service import log_audit_event
+from domain.connectors.ports.erp_connector_port import ERPConnectorPort
+from infrastructure.encryption import decrypt_config
 
 
 # Connector registry (to be populated by infrastructure layer)
@@ -282,7 +282,7 @@ def enqueue_export_job(export_id: UUID, org_id: UUID) -> None:
         org_id: Organization ID
 
     Example:
-        from ..workers.export_worker import enqueue_export_job
+        from workers.export_worker import enqueue_export_job
         enqueue_export_job(export.id, org.id)
     """
     process_erp_export.delay(

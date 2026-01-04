@@ -1,6 +1,6 @@
 """CustomerPrice SQLAlchemy model"""
 
-from sqlalchemy import Column, Text, ForeignKey, Numeric, Date, CheckConstraint
+from sqlalchemy import Column, Text, ForeignKey, Numeric, Date, CheckConstraint, Index
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
@@ -36,8 +36,10 @@ class CustomerPrice(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
 
-    # Check constraints
+    # Indexes and constraints
     __table_args__ = (
+        Index("ix_customer_price_org_id", "org_id"),
+        Index("ix_customer_price_org_customer_sku", "org_id", "customer_id", "internal_sku"),
         CheckConstraint('unit_price > 0', name='ck_customer_price_unit_price_positive'),
         CheckConstraint('min_qty > 0', name='ck_customer_price_min_qty_positive'),
     )

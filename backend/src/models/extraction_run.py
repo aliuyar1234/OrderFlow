@@ -6,11 +6,11 @@ SSOT Reference: §5.4.7 (extraction_run table)
 import enum
 from datetime import datetime
 
-from sqlalchemy import Column, Text, ForeignKey, text, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP
+from sqlalchemy import Column, Text, ForeignKey, text, Enum as SQLEnum, Index
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class ExtractionRunStatus(str, enum.Enum):
@@ -37,6 +37,10 @@ class ExtractionRun(Base):
     SSOT Reference: §5.4.7
     """
     __tablename__ = "extraction_run"
+    __table_args__ = (
+        Index("ix_extraction_run_org_id", "org_id"),
+        Index("ix_extraction_run_org_document", "org_id", "document_id"),
+    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -74,17 +78,17 @@ class ExtractionRun(Base):
         comment="When extraction finished (success or failure)"
     )
     output_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         comment="Canonical extraction output (CanonicalExtractionOutput schema)"
     )
     metrics_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         comment="Extraction metrics (runtime_ms, page_count, confidence_breakdown, etc.)"
     )
     error_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=True,
         comment="Error details if extraction failed"
     )

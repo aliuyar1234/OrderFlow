@@ -9,14 +9,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from ..database import get_db
-from ..models.user import User
-from ..models.org import Org
+from database import get_db
+from models.user import User
+from models.org import Org
 from .schemas import LoginRequest, LoginResponse, MeResponse, UserResponse
 from .password import verify_password
 from .jwt import create_access_token, _get_jwt_expiry_minutes
 from .dependencies import CurrentUser
-from ..audit.service import log_event
+from audit.service import log_audit_event
 from .rate_limit import check_rate_limit, rate_limiter
 
 
@@ -110,7 +110,7 @@ async def login(
     # Step 3: Verify password (constant-time to prevent timing attacks)
     if not user or not verify_password(credentials.password, user.password_hash):
         # Log failed login
-        log_event(
+        log_audit_event(
             db=db,
             org_id=org.id,
             action="LOGIN_FAILED",
@@ -130,7 +130,7 @@ async def login(
     # Step 4: Check if user is disabled (T022)
     if user.status == 'DISABLED':
         # Log failed login for disabled account
-        log_event(
+        log_audit_event(
             db=db,
             org_id=org.id,
             actor_id=user.id,
@@ -157,7 +157,7 @@ async def login(
     rate_limiter.clear_failed_attempts(credentials.email, credentials.org_slug)
 
     # Step 7: Log successful login (T021)
-    log_event(
+    log_audit_event(
         db=db,
         org_id=org.id,
         actor_id=user.id,

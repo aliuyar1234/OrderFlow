@@ -14,10 +14,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
 
-from ..database import get_db
-from ..models.inbound_message import InboundMessage
-from ..models.document import Document
-from ..auth.dependencies import CurrentUser
+from database import get_db
+from models.inbound_message import InboundMessage
+from models.document import Document
+from auth.dependencies import CurrentUser
 from .schemas import (
     InboxListResponse,
     InboxItemResponse,

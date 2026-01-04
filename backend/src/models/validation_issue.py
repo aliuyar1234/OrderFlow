@@ -1,12 +1,12 @@
 """ValidationIssue SQLAlchemy model (SSOT §5.4.13)"""
 
-from sqlalchemy import Column, Text, ForeignKey, Integer, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
+from sqlalchemy import Column, Text, ForeignKey, Integer, Enum as SQLEnum, Index
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from .base import Base
-from ..domain.validation.models import ValidationIssueSeverity, ValidationIssueStatus
+from .base import Base, PortableJSONB
+from domain.validation.models import ValidationIssueSeverity, ValidationIssueStatus
 
 
 class ValidationIssue(Base):
@@ -33,6 +33,10 @@ class ValidationIssue(Base):
     - created_at, updated_at: standard timestamps
     """
     __tablename__ = "validation_issue"
+    __table_args__ = (
+        Index("ix_validation_issue_org_id", "org_id"),
+        Index("ix_validation_issue_org_draft", "org_id", "draft_order_id"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     org_id = Column(UUID(as_uuid=True), ForeignKey("org.id", ondelete="RESTRICT"), nullable=False)
@@ -49,7 +53,7 @@ class ValidationIssue(Base):
         server_default="OPEN"
     )
     message = Column(Text, nullable=False)
-    details_json = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    details_json = Column(PortableJSONB, nullable=False, server_default=text("'{}'::jsonb"))
 
     resolved_at = Column(TIMESTAMP(timezone=True), nullable=True)
     resolved_by_user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="SET NULL"), nullable=True)

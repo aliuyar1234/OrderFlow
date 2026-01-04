@@ -7,11 +7,11 @@ SSOT Reference: §5.5.1 (ai_call_log table)
 """
 
 from sqlalchemy import Column, String, Text, Integer, ForeignKey, Enum as SQLEnum, text, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class AICallStatus(str, PyEnum):
@@ -81,7 +81,7 @@ class AICallLog(Base):
         nullable=False,
         default=AICallStatus.SUCCEEDED
     )
-    error_json = Column(JSONB, nullable=True)  # Error details if status=FAILED
+    error_json = Column(PortableJSONB, nullable=True)  # Error details if status=FAILED
 
     # Timestamps
     created_at = Column(

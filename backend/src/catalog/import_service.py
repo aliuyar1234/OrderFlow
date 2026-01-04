@@ -11,7 +11,7 @@ import chardet
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
 
-from ..models.product import Product
+from models.product import Product
 from .schemas import ProductImportResult, ProductImportError, CANONICAL_UOMS
 
 

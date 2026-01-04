@@ -1,11 +1,11 @@
 """CustomerDetectionCandidate SQLAlchemy model"""
 
 from sqlalchemy import Column, Text, ForeignKey, Float
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class CustomerDetectionCandidate(Base):
@@ -21,7 +21,7 @@ class CustomerDetectionCandidate(Base):
     draft_order_id = Column(UUID(as_uuid=True), nullable=False)  # FK to draft_order when that table exists
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customer.id", ondelete="CASCADE"), nullable=False)
     score = Column(Float, nullable=False)
-    signals_json = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    signals_json = Column(PortableJSONB, nullable=False, server_default=text("'{}'::jsonb"))
     status = Column(Text, nullable=False, server_default="'CANDIDATE'")  # CANDIDATE, SELECTED, REJECTED
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))

@@ -8,10 +8,10 @@ from datetime import date
 from decimal import Decimal
 import logging
 
-from ..database import get_db
-from ..dependencies import get_current_user, require_roles
-from ..models.user import User
-from ..models.customer_price import CustomerPrice
+from database import get_db
+from dependencies import get_current_user, require_roles
+from models.user import User
+from models.customer_price import CustomerPrice
 from .schemas import (
     CustomerPriceCreate,
     CustomerPriceUpdate,

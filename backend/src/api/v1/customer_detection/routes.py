@@ -7,11 +7,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend.src.database import get_db
-from backend.src.dependencies import get_current_org_id
-from backend.src.domain.customer_detection.service import CustomerDetectionService
-from backend.src.domain.customer_detection.models import Candidate as DomainCandidate
-from backend.src.schemas.customer_detection import (
+from database import get_db
+from dependencies import get_org_id
+from domain.customer_detection.service import CustomerDetectionService
+from domain.customer_detection.models import Candidate as DomainCandidate
+from schemas.customer_detection import (
     DetectionRequestSchema,
     DetectionResultSchema,
     CandidateSchema,
@@ -46,7 +46,7 @@ def convert_candidate_to_schema(candidate: DomainCandidate) -> CandidateSchema:
 async def detect_customer(
     request: DetectionRequestSchema,
     db: Annotated[Session, Depends(get_db)],
-    org_id: Annotated[UUID, Depends(get_current_org_id)]
+    org_id: Annotated[UUID, Depends(get_org_id)]
 ):
     """Detect customer from inbound order data.
 

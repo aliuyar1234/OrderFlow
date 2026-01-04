@@ -19,8 +19,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
-from ..models.org import Org
-from ..audit.service import log_audit_event
+from models.org import Org
+from audit.service import log_audit_event
 from .schemas import RetentionSettings, RetentionStatistics, RetentionReport
 
 logger = logging.getLogger(__name__)

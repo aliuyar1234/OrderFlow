@@ -14,7 +14,7 @@ from uuid import UUID
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 
-from .models.base import Base
+from models.base import Base
 
 # Get database URL from environment
 DATABASE_URL = os.getenv(
@@ -23,13 +23,18 @@ DATABASE_URL = os.getenv(
 )
 
 # Create engine with connection pooling
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,  # Verify connections before using
-    echo=False,  # Set to True for SQL query logging
-    pool_size=5,
-    max_overflow=10,
-)
+# Pool settings only apply to PostgreSQL (not SQLite)
+_engine_kwargs = {
+    "pool_pre_ping": True,  # Verify connections before using
+    "echo": False,  # Set to True for SQL query logging
+}
+
+# Only add pool settings for non-SQLite databases
+if not DATABASE_URL.startswith("sqlite"):
+    _engine_kwargs["pool_size"] = 5
+    _engine_kwargs["max_overflow"] = 10
+
+engine = create_engine(DATABASE_URL, **_engine_kwargs)
 
 # Create session factory
 SessionLocal = sessionmaker(

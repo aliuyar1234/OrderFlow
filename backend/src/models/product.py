@@ -1,11 +1,11 @@
 """Product SQLAlchemy model"""
 
-from sqlalchemy import Column, Text, ForeignKey, Boolean, Numeric
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
+from sqlalchemy import Column, Text, ForeignKey, Boolean, Numeric, Index
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class Product(Base):
@@ -15,6 +15,10 @@ class Product(Base):
     Products support UoM conversions and flexible attributes stored as JSONB.
     """
     __tablename__ = "product"
+    __table_args__ = (
+        Index("ix_product_org_id", "org_id"),
+        Index("ix_product_org_sku", "org_id", "internal_sku"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     org_id = Column(UUID(as_uuid=True), ForeignKey("org.id", ondelete="RESTRICT"), nullable=False)
@@ -22,9 +26,9 @@ class Product(Base):
     name = Column(Text, nullable=False)
     description = Column(Text, nullable=True)
     base_uom = Column(Text, nullable=False)
-    uom_conversions_json = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    uom_conversions_json = Column(PortableJSONB, nullable=False, server_default=text("'{}'::jsonb"))
     active = Column(Boolean, nullable=False, server_default="true")
-    attributes_json = Column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    attributes_json = Column(PortableJSONB, nullable=False, server_default=text("'{}'::jsonb"))
     updated_source_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))

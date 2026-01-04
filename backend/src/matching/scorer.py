@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 
-from ..models.product import Product
+from models.product import Product
 
 
 class MatchScorer:

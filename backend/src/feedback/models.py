@@ -4,7 +4,7 @@ from sqlalchemy import Column, Text, ForeignKey, Integer, Index
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
 from sqlalchemy.sql import text
 
-from ..models.base import Base
+from models.base import Base
 
 
 class FeedbackEvent(Base):

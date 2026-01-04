@@ -10,8 +10,8 @@ from sqlalchemy import text, and_
 
 from .ports import MatcherPort, MatchInput, MatchResult, MatchCandidate, MatcherError
 from .scorer import MatchScorer
-from ..models.sku_mapping import SkuMapping
-from ..models.product import Product
+from models.sku_mapping import SkuMapping
+from models.product import Product
 
 
 class HybridMatcher(MatcherPort):

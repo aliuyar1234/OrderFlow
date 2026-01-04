@@ -9,7 +9,7 @@ SSOT Reference: §7.2 (Extraction Decision Logic)
 import logging
 from typing import List, Optional
 
-from ...domain.extraction.ports import ExtractorPort
+from domain.extraction.ports import ExtractorPort
 
 logger = logging.getLogger(__name__)
 

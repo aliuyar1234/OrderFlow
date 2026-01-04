@@ -9,8 +9,8 @@ import logging
 from typing import Any, Dict
 from uuid import uuid4
 
-from ..ports import ExportResult, TestResult, ConnectorError
-from ..base_connector import BaseConnector
+from ports import ExportResult, TestResult, ConnectorError
+from base_connector import BaseConnector
 
 
 logger = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ class MockConnector(BaseConnector):
 
 
 # Auto-register the mock connector
-from ..registry import ConnectorRegistry
+from registry import ConnectorRegistry
 try:
     ConnectorRegistry.register("MOCK", MockConnector)
     logger.debug("MockConnector registered successfully")

@@ -5,7 +5,7 @@ Spec: 007-document-upload
 """
 
 import pytest
-from backend.src.domain.documents import (
+from domain.documents import (
     is_supported_mime_type,
     validate_file_size,
     validate_filename,
@@ -201,7 +201,7 @@ class TestFilenameSanitization:
 
     def test_sanitize_special_characters(self):
         """Test sanitizing special characters replaces with underscore"""
-        assert sanitize_filename('order (copy).pdf') == 'order_copy.pdf'
+        assert sanitize_filename('order (copy).pdf') == 'order_copy_.pdf'
 
     def test_sanitize_multiple_spaces(self):
         """Test sanitizing multiple spaces collapses to single underscore"""

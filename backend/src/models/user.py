@@ -1,6 +1,6 @@
 """User SQLAlchemy model"""
 
-from sqlalchemy import Column, Text, ForeignKey, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, Text, ForeignKey, CheckConstraint, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import UUID, CITEXT, TIMESTAMP
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import text
@@ -31,8 +31,9 @@ class User(Base):
     # Relationships
     org = relationship("Org", back_populates="users")
 
-    # Constraints
+    # Constraints and indexes
     __table_args__ = (
+        Index("ix_user_org_id", "org_id"),
         CheckConstraint(
             "role IN ('ADMIN', 'INTEGRATOR', 'OPS', 'VIEWER')",
             name='ck_user_role'

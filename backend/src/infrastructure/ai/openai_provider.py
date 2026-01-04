@@ -14,7 +14,7 @@ from typing import Optional
 
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError, APITimeoutError, AuthenticationError
 
-from ...domain.ai.ports import (
+from domain.ai.ports import (
     LLMProviderPort,
     LLMExtractionResult,
     LLMTimeoutError,

@@ -7,8 +7,8 @@ from uuid import UUID
 from sqlalchemy import select, and_
 from sqlalchemy.orm import Session
 
-from ...models.validation_issue import ValidationIssue as ValidationIssueModel
-from ...domain.validation.models import (
+from models.validation_issue import ValidationIssue as ValidationIssueModel
+from domain.validation.models import (
     ValidationIssue,
     ValidationIssueStatus,
     ValidationIssueSeverity,

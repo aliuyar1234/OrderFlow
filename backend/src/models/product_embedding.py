@@ -7,8 +7,8 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, String, Integer, ForeignKey, Index, Text, text
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, TIMESTAMPTZ
+from sqlalchemy import Column, String, Integer, ForeignKey, Index, Text, text, DateTime
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -83,12 +83,12 @@ class ProductEmbedding(Base):
 
     # Deduplication and staleness tracking
     text_hash = Column(String(64), nullable=False, index=True)  # SHA256 hex = 64 chars
-    updated_at_source = Column(TIMESTAMPTZ, nullable=True)  # From product.updated_source_at
+    updated_at_source = Column(DateTime(timezone=True), nullable=True)  # From product.updated_source_at
 
     # Timestamps
-    created_at = Column(TIMESTAMPTZ, nullable=False, default=datetime.utcnow, server_default=text("NOW()"))
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default=text("NOW()"))
     updated_at = Column(
-        TIMESTAMPTZ,
+        DateTime(timezone=True),
         nullable=False,
         default=datetime.utcnow,
         onupdate=datetime.utcnow,

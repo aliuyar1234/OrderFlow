@@ -6,19 +6,19 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from ....database import get_db
-from ....dependencies import get_current_user, get_current_org
-from ....models.user import User
-from ....models.org import Org
-from ....infrastructure.repositories.validation_repository import ValidationRepository
-from ....schemas.validation import (
+from database import get_db
+from dependencies import get_current_user, get_current_org
+from models.user import User
+from models.org import Org
+from infrastructure.repositories.validation_repository import ValidationRepository
+from schemas.validation import (
     ValidationIssuesListResponse,
     ValidationIssueResponse,
     AcknowledgeIssueRequest,
     AcknowledgeIssueResponse,
     ValidationSummaryResponse
 )
-from ....domain.validation.models import ValidationIssueStatus
+from domain.validation.models import ValidationIssueStatus
 
 router = APIRouter(prefix="/validation", tags=["validation"])
 

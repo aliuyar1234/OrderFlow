@@ -20,17 +20,17 @@ from fastapi import (
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from ....auth.dependencies import get_current_user
-from ....database import get_db
-from ....infrastructure.storage.s3_storage_adapter import (
+from auth.dependencies import get_current_user
+from database import get_db
+from infrastructure.storage.s3_storage_adapter import (
     S3StorageAdapter,
     StorageError,
 )
-from ....infrastructure.storage.storage_config import (
+from infrastructure.storage.storage_config import (
     load_storage_config_from_env,
 )
-from ....models.document import Document, DocumentStatus
-from ....models.user import User
+from models.document import Document, DocumentStatus
+from models.user import User
 
 logger = logging.getLogger(__name__)
 

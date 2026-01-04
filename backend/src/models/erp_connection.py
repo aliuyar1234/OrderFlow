@@ -5,7 +5,7 @@ SSOT Reference: §5.4.14 (erp_connection table)
 
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 
@@ -45,6 +45,7 @@ class ERPConnection(Base):
     # Relationships
     org = relationship("Org", back_populates="erp_connections")
     exports = relationship("ERPExport", back_populates="connection", cascade="all, delete-orphan")
+    push_logs = relationship("ERPPushLog", back_populates="connection")
 
     # Indexes
     __table_args__ = (

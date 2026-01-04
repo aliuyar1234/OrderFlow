@@ -13,6 +13,8 @@ Environment Variables:
     SMTP_PORT: Listen port (default: 25)
     SMTP_DOMAIN: Server domain for logging (default: orderflow.example.com)
     SMTP_MAX_MESSAGE_SIZE: Max email size in bytes (default: 26214400 = 25MB)
+    SMTP_MAX_CONNECTIONS: Max concurrent connections (default: 100)
+    SMTP_CONNECTION_TIMEOUT: Connection timeout in seconds (default: 60)
     DATABASE_URL: PostgreSQL connection string
     REDIS_URL: Redis connection string
     MINIO_ENDPOINT: MinIO/S3 endpoint
@@ -65,6 +67,8 @@ async def main():
     smtp_port = int(get_env('SMTP_PORT', '25'))
     smtp_domain = get_env('SMTP_DOMAIN', 'orderflow.example.com')
     max_message_size = int(get_env('SMTP_MAX_MESSAGE_SIZE', '26214400'))
+    max_connections = int(get_env('SMTP_MAX_CONNECTIONS', '100'))
+    connection_timeout = int(get_env('SMTP_CONNECTION_TIMEOUT', '60'))
 
     database_url = get_env('DATABASE_URL')
 
@@ -79,6 +83,8 @@ async def main():
     logger.info(f"SMTP Bind: {smtp_host}:{smtp_port}")
     logger.info(f"SMTP Domain: {smtp_domain}")
     logger.info(f"Max Message Size: {max_message_size} bytes")
+    logger.info(f"Max Connections: {max_connections}")
+    logger.info(f"Connection Timeout: {connection_timeout}s")
     logger.info(f"Database: {database_url.split('@')[-1]}")  # Hide credentials
     logger.info(f"Storage: {minio_endpoint}/{minio_bucket}")
 
@@ -129,11 +135,17 @@ async def main():
         get_db_session=get_db_session,
         storage_adapter=storage_adapter,
         enqueue_extraction_job=enqueue_attachment_extraction,
+        max_connections=max_connections,
+        connection_timeout=connection_timeout,
+        rate_limit_per_ip=None,  # Disabled by default, can be enabled via env var
     )
 
     logger.info("SMTP handler initialized")
 
     # Create and start SMTP controller
+    # Note: aiosmtpd Controller does not directly support max_connections or timeout
+    # These are handled at the asyncio server level via ready_timeout parameter
+    # For production deployments, use a reverse proxy (nginx) for connection limiting
     controller = Controller(
         smtp_handler,
         hostname=smtp_host,
@@ -141,6 +153,8 @@ async def main():
         server_hostname=smtp_domain,
         # Enable SMTPUTF8 for international email addresses
         enable_SMTPUTF8=True,
+        # Timeout for completing the connection handshake
+        ready_timeout=connection_timeout,
     )
 
     controller.start()

@@ -15,8 +15,25 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, Dict, Any
 from fastapi import Request
+import ipaddress
 
-from ..models.audit_log import AuditLog
+from models.audit_log import AuditLog
+
+
+def _validate_ip_address(ip: Optional[str]) -> Optional[str]:
+    """Validate and normalize IP address for PostgreSQL INET type.
+
+    Returns None if the IP address is invalid (e.g., "testclient" from FastAPI TestClient).
+    """
+    if not ip:
+        return None
+    try:
+        # Parse as IPv4 or IPv6 - raises ValueError if invalid
+        parsed = ipaddress.ip_address(ip)
+        return str(parsed)
+    except ValueError:
+        # Invalid IP address format (e.g., "testclient", hostnames)
+        return None
 
 
 def log_audit_event(
@@ -62,6 +79,9 @@ def log_audit_event(
             user_agent="Mozilla/5.0..."
         )
     """
+    # Validate IP address for PostgreSQL INET type
+    validated_ip = _validate_ip_address(ip_address)
+
     audit_entry = AuditLog(
         org_id=org_id,
         actor_id=actor_id,
@@ -69,7 +89,7 @@ def log_audit_event(
         entity_type=entity_type,
         entity_id=entity_id,
         metadata_json=metadata,
-        ip_address=ip_address,
+        ip_address=validated_ip,
         user_agent=user_agent,
     )
 
@@ -143,3 +163,7 @@ def log_from_request(
         ip_address=ip_address,
         user_agent=user_agent,
     )
+
+
+# Alias for backward compatibility
+create_audit_log = log_audit_event

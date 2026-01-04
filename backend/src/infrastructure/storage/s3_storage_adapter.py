@@ -18,7 +18,7 @@ from uuid import UUID
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from ...domain.documents.ports.object_storage_port import (
+from domain.documents.ports.object_storage_port import (
     ObjectStoragePort,
     StoredFile,
 )

@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 from datetime import datetime
 
-from src.models.org import Org
+from models.org import Org
 
 
 class TestOrgCreation:
@@ -98,53 +98,39 @@ class TestSlugValidation:
 
     def test_invalid_slug_uppercase(self, db_session):
         """Invalid: uppercase letters"""
-        org = Org(name="Test", slug="Acme-GmbH")
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug="Acme-GmbH")
 
     def test_invalid_slug_underscore(self, db_session):
         """Invalid: underscores not allowed"""
-        org = Org(name="Test", slug="acme_gmbh")
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug="acme_gmbh")
 
     def test_invalid_slug_space(self, db_session):
         """Invalid: spaces not allowed"""
-        org = Org(name="Test", slug="acme gmbh")
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug="acme gmbh")
 
     def test_invalid_slug_period(self, db_session):
         """Invalid: periods not allowed"""
-        org = Org(name="Test", slug="acme.gmbh")
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug="acme.gmbh")
 
     def test_invalid_slug_special_chars(self, db_session):
         """Invalid: special characters not allowed"""
-        org = Org(name="Test", slug="acme@gmbh")
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug="acme@gmbh")
 
     def test_invalid_slug_too_short(self, db_session):
         """Invalid: slug must be at least 2 characters"""
-        org = Org(name="Test", slug="a")
         with pytest.raises(ValueError, match="between 2 and 100 characters"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug="a")
 
     def test_invalid_slug_too_long(self, db_session):
         """Invalid: slug must not exceed 100 characters"""
         long_slug = "a" * 101
-        org = Org(name="Test", slug=long_slug)
         with pytest.raises(ValueError, match="between 2 and 100 characters"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="Test", slug=long_slug)
 
     def test_slug_minimum_length(self, db_session):
         """Valid: slug with exactly 2 characters"""
@@ -181,25 +167,19 @@ class TestNameValidation:
 
     def test_invalid_name_empty_string(self, db_session):
         """Invalid: empty name"""
-        org = Org(name="", slug="test-org")
         with pytest.raises(ValueError, match="cannot be empty"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="", slug="test-org")
 
     def test_invalid_name_whitespace_only(self, db_session):
         """Invalid: whitespace-only name"""
-        org = Org(name="   ", slug="test-org")
         with pytest.raises(ValueError, match="cannot be empty"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name="   ", slug="test-org")
 
     def test_invalid_name_too_long(self, db_session):
         """Invalid: name exceeds 200 characters"""
         long_name = "A" * 201
-        org = Org(name=long_name, slug="test-org")
         with pytest.raises(ValueError, match="cannot exceed 200 characters"):
-            db_session.add(org)
-            db_session.flush()
+            Org(name=long_name, slug="test-org")
 
     def test_name_max_length(self, db_session):
         """Valid: name with exactly 200 characters"""

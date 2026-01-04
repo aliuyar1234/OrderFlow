@@ -11,15 +11,66 @@ Database queries should use scoped sessions to prevent cross-tenant data leaks.
 SSOT Reference: §5.1 (Multi-Tenant Isolation), §11.2 (Automatic Scoping)
 """
 
-from typing import Generator
+from typing import Generator, Callable, List
 from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .database import get_db
-from .auth.dependencies import get_current_user
-from .models.user import User
-from .models.org import Org
+from database import get_db
+from auth.dependencies import get_current_user
+from models.user import User
+from models.org import Org
+
+
+def require_roles(allowed_roles: List[str]) -> Callable:
+    """Create a dependency that requires the user to have one of the specified roles.
+
+    Args:
+        allowed_roles: List of role names that are allowed (e.g., ["ADMIN", "INTEGRATOR"])
+
+    Returns:
+        Callable: FastAPI dependency function that validates user role
+
+    Raises:
+        HTTPException 403: If user's role is not in allowed_roles
+
+    Example:
+        @app.post("/customers")
+        def create_customer(
+            user: User = Depends(require_roles(["ADMIN", "INTEGRATOR"]))
+        ):
+            ...
+    """
+    def role_dependency(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required roles: {', '.join(allowed_roles)}",
+            )
+        return current_user
+    return role_dependency
+
+
+def get_current_org(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Org:
+    """Get the current user's organization.
+
+    Args:
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        Org: The user's organization
+    """
+    org = db.query(Org).filter(Org.id == current_user.org_id).first()
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="User's organization not found"
+        )
+    return org
 
 
 def get_org_id(current_user: User = Depends(get_current_user)) -> UUID:

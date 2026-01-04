@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Any
 
-from ..canonical_output import CanonicalExtractionOutput
+from domain.extraction.canonical_output import CanonicalExtractionOutput
 
 
 @dataclass

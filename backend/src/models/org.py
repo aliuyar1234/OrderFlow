@@ -1,12 +1,12 @@
 """Org model - Root entity for multi-tenant isolation"""
 
 from sqlalchemy import Column, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import validates, relationship
 from datetime import datetime
 import re
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class Org(Base):
@@ -28,7 +28,7 @@ class Org(Base):
     name = Column(Text, nullable=False)
     slug = Column(Text, nullable=False, unique=True)
     settings_json = Column(
-        JSONB,
+        PortableJSONB,
         nullable=False,
         server_default=text("'{}'::jsonb")
     )

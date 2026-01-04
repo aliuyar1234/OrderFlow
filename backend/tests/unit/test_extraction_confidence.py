@@ -108,7 +108,7 @@ class TestLineConfidence:
     def test_complete_line_full_confidence(self):
         """Test line with all essential fields gets 1.0 confidence"""
         line = ExtractionLineItem(
-            customer_sku="SKU-001",
+            line_no=1, customer_sku="SKU-001",
             qty=Decimal("10.000"),
             description="Widget A"
         )
@@ -119,7 +119,7 @@ class TestLineConfidence:
     def test_line_missing_description(self):
         """Test line without description (2 out of 3 fields)"""
         line = ExtractionLineItem(
-            customer_sku="SKU-001",
+            line_no=1, customer_sku="SKU-001",
             qty=Decimal("10.000"),
             description=None
         )
@@ -130,7 +130,7 @@ class TestLineConfidence:
     def test_line_missing_quantity(self):
         """Test line without quantity"""
         line = ExtractionLineItem(
-            customer_sku="SKU-001",
+            line_no=1, customer_sku="SKU-001",
             qty=None,
             description="Widget A"
         )
@@ -141,7 +141,7 @@ class TestLineConfidence:
     def test_line_missing_sku(self):
         """Test line without customer SKU"""
         line = ExtractionLineItem(
-            customer_sku=None,
+            line_no=1, customer_sku=None,
             qty=Decimal("10.000"),
             description="Widget A"
         )
@@ -152,7 +152,7 @@ class TestLineConfidence:
     def test_line_only_sku(self):
         """Test line with only SKU"""
         line = ExtractionLineItem(
-            customer_sku="SKU-001",
+            line_no=1, customer_sku="SKU-001",
             qty=None,
             description=None
         )
@@ -163,7 +163,7 @@ class TestLineConfidence:
     def test_line_no_essential_fields(self):
         """Test line with no essential fields"""
         line = ExtractionLineItem(
-            customer_sku=None,
+            line_no=1, customer_sku=None,
             qty=None,
             description=None
         )
@@ -175,7 +175,7 @@ class TestLineConfidence:
         """Test optional fields don't affect confidence score"""
         # Line with optional fields (uom, unit_price) but missing description
         line = ExtractionLineItem(
-            customer_sku="SKU-001",
+            line_no=1, customer_sku="SKU-001",
             qty=Decimal("10.000"),
             description=None,
             uom="EA",
@@ -193,9 +193,9 @@ class TestLinesConfidence:
     def test_all_complete_lines(self):
         """Test all lines complete gives 1.0 average"""
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
-            ExtractionLineItem(customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
-            ExtractionLineItem(customer_sku="SKU-003", qty=Decimal("5"), description="Widget C"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-003", qty=Decimal("5"), description="Widget C"),
         ]
 
         confidence = calculate_lines_confidence(lines)
@@ -204,9 +204,9 @@ class TestLinesConfidence:
     def test_mixed_completeness_lines(self):
         """Test lines with varying completeness"""
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),  # 1.0
-            ExtractionLineItem(customer_sku="SKU-002", qty=Decimal("20"), description=None),        # 0.667
-            ExtractionLineItem(customer_sku="SKU-003", qty=None, description=None),                 # 0.333
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),  # 1.0
+            ExtractionLineItem(line_no=1, customer_sku="SKU-002", qty=Decimal("20"), description=None),        # 0.667
+            ExtractionLineItem(line_no=1, customer_sku="SKU-003", qty=None, description=None),                 # 0.333
         ]
 
         confidence = calculate_lines_confidence(lines)
@@ -216,7 +216,7 @@ class TestLinesConfidence:
     def test_single_line(self):
         """Test single line average equals that line's confidence"""
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description=None),  # 0.667
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description=None),  # 0.667
         ]
 
         confidence = calculate_lines_confidence(lines)
@@ -232,8 +232,8 @@ class TestLinesConfidence:
     def test_all_incomplete_lines(self):
         """Test all lines with minimal data"""
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=None, description=None),  # 0.333
-            ExtractionLineItem(customer_sku="SKU-002", qty=None, description=None),  # 0.333
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=None, description=None),  # 0.333
+            ExtractionLineItem(line_no=1, customer_sku="SKU-002", qty=None, description=None),  # 0.333
         ]
 
         confidence = calculate_lines_confidence(lines)
@@ -251,8 +251,8 @@ class TestOverallConfidence:
             currency="EUR"
         )
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
-            ExtractionLineItem(customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -272,7 +272,7 @@ class TestOverallConfidence:
         )
         # Lines: 1.0 (all complete)
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -291,7 +291,7 @@ class TestOverallConfidence:
             currency=None
         )  # 0.333
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
         ]  # 1.0
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -311,7 +311,7 @@ class TestOverallConfidence:
             currency=None
         )  # 0.667
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description=None),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description=None),
         ]  # 0.667
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -328,8 +328,8 @@ class TestOverallConfidence:
             currency="EUR"
         )
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
-            ExtractionLineItem(customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -366,7 +366,7 @@ class TestOverallConfidence:
             currency="EUR"
         )
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -391,8 +391,8 @@ class TestConfidenceThresholds:
             currency="EUR"
         )
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
-            ExtractionLineItem(customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-002", qty=Decimal("20"), description="Widget B"),
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -410,7 +410,7 @@ class TestConfidenceThresholds:
             currency=None  # Missing currency
         )
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("10"), description="Widget A"),
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -428,7 +428,7 @@ class TestConfidenceThresholds:
             currency=None
         )  # 0.333
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=None, description=None),  # 0.333
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=None, description=None),  # 0.333
         ]
         output = CanonicalExtractionOutput(order=header, lines=lines)
 
@@ -444,7 +444,7 @@ class TestEdgeCases:
     def test_very_long_lines_list(self):
         """Test confidence calculation with many lines"""
         lines = [
-            ExtractionLineItem(customer_sku=f"SKU-{i:03d}", qty=Decimal("10"), description=f"Item {i}")
+            ExtractionLineItem(line_no=1, customer_sku=f"SKU-{i:03d}", qty=Decimal("10"), description=f"Item {i}")
             for i in range(100)
         ]
         header = ExtractionOrderHeader(
@@ -462,7 +462,7 @@ class TestEdgeCases:
     def test_lines_with_zero_qty(self):
         """Test line with quantity=0 is still considered complete"""
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("0"), description="Widget A"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("0"), description="Widget A"),
         ]
         header = ExtractionOrderHeader(
             order_number="PO-12345",
@@ -479,7 +479,7 @@ class TestEdgeCases:
     def test_lines_with_negative_qty(self):
         """Test line with negative quantity is still considered complete"""
         lines = [
-            ExtractionLineItem(customer_sku="SKU-001", qty=Decimal("-5"), description="Return"),
+            ExtractionLineItem(line_no=1, customer_sku="SKU-001", qty=Decimal("-5"), description="Return"),
         ]
         header = ExtractionOrderHeader(
             order_number="PO-12345",

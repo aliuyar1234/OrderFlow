@@ -7,11 +7,11 @@ from typing import Optional
 from uuid import UUID
 import logging
 
-from ..database import get_db
-from ..dependencies import get_current_user, require_roles
-from ..models.user import User
-from ..models.customer import Customer
-from ..models.customer_contact import CustomerContact
+from database import get_db
+from dependencies import get_current_user, require_roles
+from models.user import User
+from models.customer import Customer
+from models.customer_contact import CustomerContact
 from .schemas import (
     CustomerCreate,
     CustomerUpdate,

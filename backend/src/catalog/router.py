@@ -7,10 +7,10 @@ from typing import Optional, List
 from uuid import UUID
 import logging
 
-from ..database import get_db
-from ..dependencies import get_current_user, require_roles
-from ..models.user import User
-from ..models.product import Product, UnitOfMeasure
+from database import get_db
+from dependencies import get_current_user, require_roles
+from models.user import User
+from models.product import Product, UnitOfMeasure
 from .schemas import (
     ProductCreate,
     ProductUpdate,

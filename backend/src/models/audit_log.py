@@ -1,11 +1,11 @@
 """AuditLog SQLAlchemy model"""
 
-from sqlalchemy import Column, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP, INET
+from sqlalchemy import Column, Text, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, INET
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class AuditLog(Base):
@@ -15,6 +15,10 @@ class AuditLog(Base):
     Entries are append-only and should never be updated or deleted.
     """
     __tablename__ = "audit_log"
+    __table_args__ = (
+        Index("ix_audit_log_org_id", "org_id"),
+        Index("ix_audit_log_org_id_created_at", "org_id", "created_at"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     org_id = Column(UUID(as_uuid=True), ForeignKey("org.id", ondelete="RESTRICT"), nullable=False)
@@ -22,7 +26,7 @@ class AuditLog(Base):
     action = Column(Text, nullable=False)
     entity_type = Column(Text, nullable=True)
     entity_id = Column(UUID(as_uuid=True), nullable=True)
-    metadata_json = Column(JSONB, nullable=True)
+    metadata_json = Column(PortableJSONB, nullable=True)
     ip_address = Column(INET, nullable=True)
     user_agent = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))

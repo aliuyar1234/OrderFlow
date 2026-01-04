@@ -16,7 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from uuid import UUID
 import jwt
 
-from ..auth.jwt import decode_token
+from auth.jwt import decode_token
 
 
 class TenantContextMiddleware(BaseHTTPMiddleware):

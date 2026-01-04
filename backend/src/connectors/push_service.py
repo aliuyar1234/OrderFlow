@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 from .ports import ERPConnectorPort, ExportResult, ConnectorError
 from .registry import ConnectorRegistry
 from .encryption import EncryptionService, EncryptionError
-from ..models import ERPConnection, ERPPushLog
+from models import ERPConnection, ERPPushLog
 
 
 logger = logging.getLogger(__name__)

@@ -7,14 +7,14 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from ...ai.ports import (
+from ai.ports import (
     LLMProviderPort,
     LLMProviderError,
     LLMTimeoutError,
     LLMRateLimitError,
 )
-from ..schemas.extraction_output import ExtractionOutput
-from ..hallucination_guards import apply_hallucination_guards
+from schemas.extraction_output import ExtractionOutput
+from hallucination_guards import apply_hallucination_guards
 
 
 logger = logging.getLogger(__name__)

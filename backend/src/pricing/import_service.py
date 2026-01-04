@@ -10,7 +10,7 @@ Per spec 020-customer-prices and §8.8, supports:
 
 import pandas as pd
 from io import BytesIO
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
@@ -18,8 +18,8 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 import logging
 
-from ..models.customer_price import CustomerPrice
-from ..models.customer import Customer
+from models.customer_price import CustomerPrice
+from models.customer import Customer
 from .schemas import PriceImportResult
 
 logger = logging.getLogger(__name__)

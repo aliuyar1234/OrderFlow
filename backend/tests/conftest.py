@@ -12,6 +12,16 @@ Usage:
         assert response.status_code == 200
 """
 
+import sys
+import os
+from pathlib import Path
+
+# Set environment variables BEFORE any imports to ensure they take effect
+# Set very high rate limits for testing (effectively disable rate limiting)
+os.environ.setdefault("RATE_LIMIT_MAX_ATTEMPTS", "10000")
+os.environ.setdefault("RATE_LIMIT_WINDOW", "1")
+os.environ.setdefault("LOCKOUT_THRESHOLD", "10000")
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -20,29 +30,92 @@ from uuid import UUID, uuid4
 from typing import Generator
 
 # Adjust imports based on your project structure
-import sys
-from pathlib import Path
 backend_src = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(backend_src))
 
-from database import get_db
+# Set PYTHONPATH for proper module resolution
+# Use PostgreSQL - models require PostgreSQL features (gen_random_uuid, JSONB)
+# Docker PostgreSQL runs on port 5433 with orderflow user
+if "DATABASE_URL" not in os.environ:
+    os.environ["DATABASE_URL"] = "postgresql://orderflow:dev_password@localhost:5433/orderflow"
+
+# Set required environment variables for testing
+if "PASSWORD_PEPPER" not in os.environ:
+    os.environ["PASSWORD_PEPPER"] = "test-pepper-secret-key-32-chars-long"
+
+if "JWT_SECRET" not in os.environ:
+    os.environ["JWT_SECRET"] = "test-jwt-secret-key-256-bits-minimum-length-required-for-security"
+
+if "MINIO_ROOT_USER" not in os.environ:
+    os.environ["MINIO_ROOT_USER"] = "minioadmin"
+
+if "MINIO_ROOT_PASSWORD" not in os.environ:
+    os.environ["MINIO_ROOT_PASSWORD"] = "minioadmin"
+
+if "MINIO_ENDPOINT" not in os.environ:
+    os.environ["MINIO_ENDPOINT"] = "localhost:9000"
+
+if "MINIO_BUCKET" not in os.environ:
+    os.environ["MINIO_BUCKET"] = "test-bucket"
+
+
+# Import directly from modules (avoid relative import issues)
+from sqlalchemy.orm import declarative_base
 from models.base import Base
 from models.user import User
 from models.org import Org
+from models.audit_log import AuditLog
+from models.document import Document
+from models.inbound_message import InboundMessage
+from models.draft_order import DraftOrder, DraftOrderLine
+from models.extraction_run import ExtractionRun
+from models.sku_mapping import SkuMapping
+from models.product import Product
+from models.customer import Customer
+from models.customer_price import CustomerPrice
+from models.validation_issue import ValidationIssue
+from models.erp_export import ERPExport
+from models.ai_call_log import AICallLog
+from models.erp_connection import ERPConnection
+from models.erp_push_log import ERPPushLog
 from auth.password import hash_password
 from auth.jwt import create_access_token
 
 
-# Test database URL (use in-memory SQLite or separate test database)
-TEST_DATABASE_URL = "sqlite:///:memory:"
-
-# Create test engine
-test_engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}  # SQLite specific
+# Test database URL - PostgreSQL is required (models use gen_random_uuid, JSONB)
+TEST_DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://orderflow:dev_password@localhost:5433/orderflow"
 )
 
+# Create test engine
+test_engine = create_engine(TEST_DATABASE_URL)
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+
+# Import the actual get_db from database to use for dependency override
+from database import get_db as database_get_db
+
+
+@pytest.fixture(scope="function", autouse=True)
+def reset_rate_limiter():
+    """Reset rate limiting state before each test.
+
+    Clears Redis keys used for rate limiting to ensure fresh state.
+    """
+    try:
+        from auth.rate_limit import rate_limiter
+        if rate_limiter.redis:
+            # Clear all rate limiting and lockout keys
+            keys = rate_limiter.redis.keys("rate_limit:*")
+            keys += rate_limiter.redis.keys("lockout:*")
+            keys += rate_limiter.redis.keys("failed_attempts:*")
+            if keys:
+                rate_limiter.redis.delete(*keys)
+    except Exception:
+        pass  # If Redis not available, no action needed
+    yield
 
 
 @pytest.fixture(scope="function")
@@ -140,6 +213,26 @@ def viewer_user(db_session: Session, test_org: Org) -> User:
 
 
 @pytest.fixture(scope="function")
+def client(db_session: Session):
+    """Create an unauthenticated test client.
+
+    Returns a FastAPI TestClient without any authentication.
+    Useful for testing public endpoints and auth flow.
+    """
+    from main import app
+
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[database_get_db] = override_get_db
+
+    return TestClient(app)
+
+
+@pytest.fixture(scope="function")
 def authenticated_client(db_session: Session, admin_user: User):
     """Create a test client authenticated as admin user.
 
@@ -154,7 +247,7 @@ def authenticated_client(db_session: Session, admin_user: User):
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[database_get_db] = override_get_db
 
     # Generate JWT token for admin user
     token = create_access_token(
@@ -184,7 +277,7 @@ def ops_client(db_session: Session, ops_user: User):
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[database_get_db] = override_get_db
 
     token = create_access_token(
         user_id=ops_user.id,
@@ -212,7 +305,7 @@ def viewer_client(db_session: Session, viewer_user: User):
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[database_get_db] = override_get_db
 
     token = create_access_token(
         user_id=viewer_user.id,

@@ -13,7 +13,7 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ...models.ai_call_log import AICallLog
+from models.ai_call_log import AICallLog
 
 
 class BudgetGateError(Exception):

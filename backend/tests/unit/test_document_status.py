@@ -5,7 +5,7 @@ Spec: 007-document-upload
 """
 
 import pytest
-from backend.src.domain.documents import (
+from domain.documents import (
     DocumentStatus,
     can_transition,
     ALLOWED_TRANSITIONS,

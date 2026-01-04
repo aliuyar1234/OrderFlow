@@ -15,11 +15,11 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional
 
-from ..database import get_db
-from ..models.audit_log import AuditLog
-from ..auth.dependencies import require_role
-from ..auth.roles import UserRole
-from ..models.user import User
+from database import get_db
+from models.audit_log import AuditLog
+from auth.dependencies import require_role
+from auth.roles import UserRole
+from models.user import User
 from .schemas import AuditLogResponse, AuditLogListResponse
 
 

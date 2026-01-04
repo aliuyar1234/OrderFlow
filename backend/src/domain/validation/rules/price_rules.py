@@ -4,7 +4,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Optional
 
-from ..models import (
+from domain.validation.models import (
     ValidationIssue,
     ValidationIssueType,
     ValidationIssueSeverity,

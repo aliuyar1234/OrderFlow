@@ -1,6 +1,7 @@
 # Environment variables
 .env
 .env.local
+.env.*.local
 
 # Python
 __pycache__/
@@ -41,6 +42,7 @@ ENV/
 # Testing
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 .tox/
 .mypy_cache/
@@ -56,6 +58,7 @@ docker-compose.override.yml
 
 # Logs
 *.log
+logs/
 
 # OS
 .DS_Store
@@ -65,3 +68,51 @@ Thumbs.db
 *.tmp
 tmp/
 temp/
+
+# ===========================================
+# Claude Code / AI Assistant (Internal Only)
+# ===========================================
+.claude/
+CLAUDE.md
+.specify/
+thoughts/
+
+# Continuity ledgers and handoffs
+**/CONTINUITY_*.md
+**/HANDOFF_*.md
+
+# ===========================================
+# Internal / Development Only
+# ===========================================
+
+# Temporary fix/debug scripts
+fix_*.py
+debug_*.py
+test_*.py.bak
+
+# Local settings that shouldn't be shared
+*.local.json
+*.local.yaml
+*.local.yml
+
+# Build artifacts
+node_modules/
+.next/
+out/
+.nuxt/
+.output/
+
+# Generated documentation (rebuild from source)
+site/
+docs/_build/
+
+# Profiling
+*.prof
+*.profile
+
+# Secrets (extra protection)
+**/secrets/
+**/credentials/
+*.pem
+*.key
+!.env.example

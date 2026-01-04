@@ -37,11 +37,10 @@ class TestUnauthenticatedAccess:
     @pytest.mark.parametrize("endpoint,method", [
         ("/api/v1/customers", "GET"),
         ("/api/v1/products", "GET"),
-        ("/api/v1/drafts", "GET"),
-        ("/api/v1/documents", "GET"),
-        ("/users/me", "GET"),
+        ("/api/v1/draft-orders", "GET"),
+        ("/api/v1/auth/me", "GET"),
         ("/api/v1/customers", "POST"),
-        ("/admin/settings", "GET"),
+        ("/api/v1/users", "GET"),
     ])
     def test_protected_endpoints_require_auth(self, client: TestClient, endpoint: str, method: str):
         """Test protected endpoints return 401 without authentication"""
@@ -64,7 +63,7 @@ class TestUnauthenticatedAccess:
         ]
 
         for headers in malformed_headers:
-            response = client.get("/users/me", headers=headers)
+            response = client.get("/api/v1/auth/me", headers=headers)
             assert response.status_code == 401
 
 
@@ -104,7 +103,7 @@ class TestTokenManipulation:
 
         # Try to access with tampered token
         response = client.get(
-            "/users/me",
+            "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {tampered_token}"}
         )
 
@@ -138,7 +137,7 @@ class TestTokenManipulation:
         none_token = f"{encoded_header}.{encoded_payload}."
 
         response = client.get(
-            "/users/me",
+            "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {none_token}"}
         )
 
@@ -182,7 +181,12 @@ class TestTokenManipulation:
 
         # Should only show org A's customers (empty in this case)
         if response.status_code == 200:
-            assert len(response.json()) == 0
+            data = response.json()
+            # Handle paginated response {"items": [...], "total": N}
+            if isinstance(data, dict) and "items" in data:
+                assert len(data["items"]) == 0
+            else:
+                assert len(data) == 0
 
 
 class TestPrivilegeEscalation:
@@ -212,7 +216,7 @@ class TestPrivilegeEscalation:
 
         # Try to create a user (ADMIN action)
         response = client.post(
-            "/admin/users",
+            "/api/v1/users",
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "email": "newuser@test.com",
@@ -247,9 +251,9 @@ class TestPrivilegeEscalation:
             email=ops_user.email
         )
 
-        # Try to access admin settings
+        # Try to access admin users list
         response = client.get(
-            "/admin/settings",
+            "/api/v1/users",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -280,7 +284,7 @@ class TestPrivilegeEscalation:
 
         # Try to change own role to ADMIN
         response = client.patch(
-            f"/users/{ops_user.id}",
+            f"/api/v1/users/{ops_user.id}",
             headers={"Authorization": f"Bearer {token}"},
             json={"role": "ADMIN"}
         )
@@ -314,8 +318,9 @@ class TestRateLimiting:
         failed_attempts = 0
         for _ in range(20):
             response = client.post(
-                "/auth/login",
+                "/api/v1/auth/login",
                 json={
+                    "org_slug": test_org.slug,
                     "email": "user@test.com",
                     "password": "WrongPassword"
                 }
@@ -345,8 +350,9 @@ class TestRateLimiting:
         # Attempt multiple failed logins
         for _ in range(10):
             client.post(
-                "/auth/login",
+                "/api/v1/auth/login",
                 json={
+                    "org_slug": test_org.slug,
                     "email": "user@test.com",
                     "password": "WrongPassword"
                 }
@@ -354,8 +360,9 @@ class TestRateLimiting:
 
         # Try with correct password (should be locked if implemented)
         response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={
+                "org_slug": test_org.slug,
                 "email": "user@test.com",
                 "password": "CorrectP@ss123"
             }
@@ -385,8 +392,9 @@ class TestSessionSecurity:
 
         # Login
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={
+                "org_slug": test_org.slug,
                 "email": "user@test.com",
                 "password": "SecureP@ss123"
             }
@@ -397,14 +405,14 @@ class TestSessionSecurity:
 
         # Verify token works
         response = client.get(
-            "/users/me",
+            "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200
 
         # Logout (if endpoint exists)
         logout_response = client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -433,7 +441,7 @@ class TestSessionSecurity:
 
         # Try to access with expired token
         response = client.get(
-            "/users/me",
+            "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {expired_token}"}
         )
 
@@ -452,8 +460,9 @@ class TestPasswordSecurity:
 
         # Attempt login
         client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={
+                "org_slug": test_org.slug,
                 "email": "user@test.com",
                 "password": "SecretP@ss123"
             }
@@ -474,7 +483,7 @@ class TestPasswordSecurity:
 
         # Get user details
         response = client.get(
-            "/users/me",
+            "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -505,8 +514,9 @@ class TestPasswordSecurity:
         # Time login for existing user with wrong password
         start = time.time()
         client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={
+                "org_slug": test_org.slug,
                 "email": "existing@test.com",
                 "password": "WrongPassword"
             }
@@ -516,8 +526,9 @@ class TestPasswordSecurity:
         # Time login for non-existent user
         start = time.time()
         client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={
+                "org_slug": test_org.slug,
                 "email": "nonexistent@test.com",
                 "password": "AnyPassword"
             }

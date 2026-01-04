@@ -257,7 +257,7 @@ def process_ack_data(db: Session, connector: ERPConnection, ack_filename: str, a
 def extract_draft_order_id(ack_filename: str) -> Optional[str]:
     """Extract draft_order_id from acknowledgment filename.
 
-    Pattern: (ack|error)_sales_order_{draft_id}_{timestamp}_{uuid}.json
+    Pattern: (ack|error)_sales_order_{draft_id}_{YYYYMMDD}_{HHMMSS}_{uuid}.json
 
     Args:
         ack_filename: Acknowledgment filename
@@ -265,8 +265,9 @@ def extract_draft_order_id(ack_filename: str) -> Optional[str]:
     Returns:
         Draft order ID or None if not found
     """
-    # Match pattern: (ack|error)_sales_order_{draft_id}_{timestamp}_{uuid}.json
-    pattern = r'^(?:ack|error)_sales_order_([a-f0-9-]+)_\d+_[a-f0-9]+\.json$'
+    # Match pattern: (ack|error)_sales_order_{draft_id}_{YYYYMMDD}_{HHMMSS}_{uuid}.json
+    # draft_id can be alphanumeric (short id) or UUID format
+    pattern = r'^(?:ack|error)_sales_order_([a-zA-Z0-9-]+)_\d{8}_\d{6}_[a-zA-Z0-9]+\.json$'
     match = re.match(pattern, ack_filename)
 
     if match:

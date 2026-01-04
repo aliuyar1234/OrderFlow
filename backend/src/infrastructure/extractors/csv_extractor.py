@@ -13,14 +13,14 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Optional, Any, List, Dict
 
-from ...domain.extraction.canonical_output import (
+from domain.extraction.canonical_output import (
     CanonicalExtractionOutput,
     ExtractionOrderHeader,
     ExtractionLineItem,
 )
-from ...domain.extraction.confidence import calculate_confidence
-from ...domain.extraction.ports import ExtractorPort, ExtractionResult
-from ...domain.documents.ports.object_storage_port import ObjectStoragePort
+from domain.extraction.confidence import calculate_confidence
+from domain.extraction.ports import ExtractorPort, ExtractionResult
+from domain.documents.ports.object_storage_port import ObjectStoragePort
 
 logger = logging.getLogger(__name__)
 

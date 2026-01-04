@@ -6,11 +6,11 @@ SSOT Reference: §5.4.15 (erp_export table), §5.2.9 (ERPExportStatus)
 from datetime import datetime, timezone
 from enum import Enum
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 
-from .base import Base
+from .base import Base, PortableJSONB
 
 
 class ERPExportStatus(str, Enum):
@@ -64,7 +64,7 @@ class ERPExport(Base):
     dropzone_path = Column(Text, nullable=True)
     status = Column(String(20), nullable=False, default=ERPExportStatus.PENDING.value)
     erp_order_id = Column(Text, nullable=True)
-    error_json = Column(JSONB, nullable=True)
+    error_json = Column(PortableJSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

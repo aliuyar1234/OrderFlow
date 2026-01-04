@@ -16,12 +16,12 @@ from celery import shared_task
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..models.inbound_message import (
+from models.inbound_message import (
     InboundMessage,
     InboundMessageStatus,
 )
-from ..models.document import Document, DocumentStatus
-from ..infrastructure.ingest.mime_parser import (
+from models.document import Document, DocumentStatus
+from infrastructure.ingest.mime_parser import (
     parse_mime_message,
     extract_attachments,
 )
@@ -98,7 +98,7 @@ def extract_attachments_task(
         session.commit()
 
         # Get storage adapter (injected via settings)
-        from ..infrastructure.storage.s3_storage_adapter import get_storage_adapter
+        from infrastructure.storage.s3_storage_adapter import get_storage_adapter
         storage_adapter = get_storage_adapter()
 
         # Retrieve raw MIME from storage
