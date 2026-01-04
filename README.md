@@ -15,19 +15,26 @@ Modular Monolith with Workers + SMTP Ingest, following Hexagonal Architecture (P
 - PostgreSQL 16 with `pg_trgm` + `pgvector` extensions
 - S3-compatible Object Storage (MinIO locally)
 
+**Frontend:**
+- Next.js 14 + React 18
+- TypeScript
+- TailwindCSS
+- TanStack Query
+
 ## Quick Start
 
 ### Prerequisites
 
 - Docker and Docker Compose
 - Python 3.12+
+- Node.js 18+ (for frontend)
 - Git
 
 ### 1. Clone and Setup Environment
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/aliuyar1234/OrderFlow.git
 cd OrderFlow
 
 # Copy environment template
@@ -48,11 +55,11 @@ docker compose ps
 ```
 
 You should see all three services with status "healthy":
-- `orderflow_postgres` on port 5432
+- `orderflow_postgres` on port 5433
 - `orderflow_redis` on port 6379
 - `orderflow_minio` on ports 9000 (API) and 9001 (Console)
 
-### 3. Setup Python Environment
+### 3. Setup Backend
 
 ```bash
 cd backend
@@ -80,9 +87,25 @@ alembic upgrade head
 alembic current
 ```
 
-### 5. Access Services
+### 5. Setup Frontend
 
-- **PostgreSQL**: `localhost:5432`
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### 6. Access Services
+
+- **Backend API**: http://localhost:8000
+- **Frontend**: http://localhost:3000
+- **API Docs**: http://localhost:8000/docs
+
+- **PostgreSQL**: `localhost:5433`
   - Database: `orderflow`
   - User: `orderflow`
   - Password: `dev_password` (from .env)
@@ -100,7 +123,7 @@ alembic current
 ```bash
 cd backend
 
-# Run all tests
+# Run all tests (352 tests)
 pytest
 
 # Run with coverage
@@ -110,6 +133,7 @@ pytest --cov=src --cov-report=html
 pytest tests/unit
 pytest tests/integration
 pytest tests/schema
+pytest tests/security
 ```
 
 ### Database Migrations
@@ -127,8 +151,6 @@ alembic upgrade head
 # Rollback one migration
 alembic downgrade -1
 ```
-
-**Important:** Always review auto-generated migrations before applying them. See [docs/migrations.md](./docs/migrations.md) for detailed migration best practices and multi-tenant considerations.
 
 ### Code Quality
 
@@ -150,29 +172,35 @@ mypy src
 OrderFlow/
 ├── backend/
 │   ├── src/
-│   │   ├── models/          # SQLAlchemy models
-│   │   ├── database.py      # Database session factory
-│   │   └── __init__.py
-│   ├── migrations/          # Alembic migrations
-│   │   ├── versions/        # Migration files
-│   │   ├── env.py
-│   │   └── script.py.mako
+│   │   ├── api/              # FastAPI routes
+│   │   ├── auth/             # Authentication & authorization
+│   │   ├── domain/           # Business logic (hexagonal core)
+│   │   ├── infrastructure/   # External adapters (DB, S3, SMTP)
+│   │   ├── models/           # SQLAlchemy models
+│   │   ├── workers/          # Celery background tasks
+│   │   └── main.py           # Application entrypoint
+│   ├── migrations/           # Alembic migrations
 │   ├── tests/
-│   │   ├── unit/
-│   │   ├── integration/
-│   │   └── schema/
-│   ├── requirements/
-│   │   ├── base.txt         # Production dependencies
-│   │   └── dev.txt          # Development dependencies
-│   └── alembic.ini
+│   │   ├── unit/             # Unit tests
+│   │   ├── integration/      # Integration tests
+│   │   ├── schema/           # Database schema tests
+│   │   └── security/         # Security tests
+│   └── requirements/
+│       ├── base.txt          # Production dependencies
+│       └── dev.txt           # Development dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── app/              # Next.js app router pages
+│   │   └── components/       # React components
+│   ├── package.json
+│   └── tailwind.config.ts
 ├── docker/
-│   └── init-extensions.sql  # PostgreSQL extensions setup
-├── docs/                    # Technical documentation
-├── specs/                   # Feature specifications
-├── docker-compose.yml       # Development services
-├── .env.example             # Environment template
-├── CLAUDE.md               # AI assistant context
-└── README.md               # This file
+│   └── init-extensions.sql   # PostgreSQL extensions setup
+├── docs/                     # Technical documentation
+├── specs/                    # Feature specifications
+├── docker-compose.yml        # Development services
+├── .env.example              # Environment template
+└── README.md
 ```
 
 ## Multi-Tenant Architecture
@@ -192,15 +220,12 @@ Every table must include:
 - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 - `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
-## Documentation
+## API Documentation
 
-- **[Database Configuration](./docs/database-configuration.md)** - Connection strings, pool settings, SSL/TLS configuration
-- **[Database Migrations](./docs/migrations.md)** - Migration best practices, multi-tenant patterns, Alembic commands reference
-
-## Contributing
-
-See [CLAUDE.md](./CLAUDE.md) for development guidelines and architectural constraints.
+Once the backend is running, access the interactive API docs at:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
 ## License
 
-Proprietary - All Rights Reserved
+MIT License - See [LICENSE](./LICENSE) for details.
