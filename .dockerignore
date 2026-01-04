@@ -1,0 +1,132 @@
+# =============================================================================
+# OrderFlow Docker Ignore File
+# Optimizes Docker build context by excluding unnecessary files
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs/
+specs/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage_html/
+.tox/
+.nox/
+*.cover
+*.py,cover
+.hypothesis/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Linting
+.ruff_cache/
+
+# Environment files (use Docker secrets instead)
+.env
+.env.*
+!.env.example
+
+# Local development
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+*.bak
+
+# Secrets (never include in build context)
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+secrets/
+credentials/
+
+# Frontend build artifacts (if frontend in same repo)
+node_modules/
+.next/
+out/
+.nuxt/
+.output/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Coverage reports
+coverage.xml
+junit.xml
+
+# Misc
+Makefile
+Dockerfile*
+!Dockerfile
+!smtp_ingest.Dockerfile
