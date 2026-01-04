@@ -1,0 +1,764 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Draft Orders API
+  description: API endpoints consumed by Draft Orders UI (014-draft-orders-ui)
+  version: 1.0.0
+  contact:
+    name: OrderFlow Team
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Development server
+  - url: https://api.orderflow.example.com/api/v1
+    description: Production server
+
+tags:
+  - name: drafts
+    description: Draft order operations
+  - name: products
+    description: Product catalog search
+  - name: validations
+    description: Validation operations
+  - name: documents
+    description: Document preview/download
+
+paths:
+  /drafts/{draft_id}:
+    get:
+      tags: [drafts]
+      summary: Get draft order by ID
+      operationId: getDraftById
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          description: Draft order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: []
+
+    patch:
+      tags: [drafts]
+      summary: Update draft order header
+      operationId: updateDraftHeader
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDraftHeaderDTO'
+      responses:
+        '200':
+          description: Updated draft order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/lines:
+    post:
+      tags: [drafts]
+      summary: Add new line to draft
+      operationId: addDraftLine
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDraftLineDTO'
+      responses:
+        '201':
+          description: Created line
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrderLine'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/lines/{line_id}:
+    patch:
+      tags: [drafts]
+      summary: Update draft order line
+      operationId: updateDraftLine
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/LineId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDraftLineDTO'
+      responses:
+        '200':
+          description: Updated line
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrderLine'
+      security:
+        - BearerAuth: []
+
+    delete:
+      tags: [drafts]
+      summary: Delete draft order line
+      operationId: deleteDraftLine
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/LineId'
+      responses:
+        '204':
+          description: Line deleted
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/confirm-mapping:
+    post:
+      tags: [drafts]
+      summary: Confirm SKU mapping for line
+      operationId: confirmMapping
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmMappingDTO'
+      responses:
+        '200':
+          description: Mapping confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrderLine'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/confirm-customer:
+    post:
+      tags: [drafts]
+      summary: Confirm customer selection
+      operationId: confirmCustomer
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmCustomerDTO'
+      responses:
+        '200':
+          description: Customer confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/validate:
+    post:
+      tags: [validations]
+      summary: Run validations on draft
+      operationId: runValidations
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/match:
+    post:
+      tags: [drafts]
+      summary: Re-run matching for all lines
+      operationId: rerunMatching
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          description: Matching completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/retry-ai:
+    post:
+      tags: [drafts]
+      summary: Retry extraction with AI (LLM fallback)
+      operationId: retryWithAI
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryWithAIDTO'
+      responses:
+        '200':
+          description: Retry completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+        '402':
+          description: Budget exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetError'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/approve:
+    post:
+      tags: [drafts]
+      summary: Approve draft order
+      operationId: approveDraft
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          description: Draft approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+        '400':
+          description: Cannot approve (blocking issues)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /drafts/{draft_id}/push-erp:
+    post:
+      tags: [drafts]
+      summary: Push draft to ERP
+      operationId: pushToERP
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          description: Push initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+      security:
+        - BearerAuth: []
+
+  /products:
+    get:
+      tags: [products]
+      summary: Search products (for SKU dropdown)
+      operationId: searchProducts
+      parameters:
+        - name: search
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: Product search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSearchResult'
+      security:
+        - BearerAuth: []
+
+  /documents/{document_id}/preview:
+    get:
+      tags: [documents]
+      summary: Get document preview (signed URL)
+      operationId: getDocumentPreview
+      parameters:
+        - name: document_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Signed URL for preview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    DraftId:
+      name: draft_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    LineId:
+      name: line_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    DraftOrder:
+      type: object
+      required: [id, org_id, status, currency, created_at, updated_at, lines, issues]
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        document_id:
+          type: string
+          format: uuid
+          nullable: true
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        customer_candidates_json:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerCandidate'
+          nullable: true
+        customer_confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          nullable: true
+        external_order_number:
+          type: string
+          nullable: true
+        order_date:
+          type: string
+          format: date
+          nullable: true
+        currency:
+          type: string
+          enum: [EUR, CHF, USD]
+        requested_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/DraftOrderStatus'
+        approved_by_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/DraftOrderLine'
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+
+    DraftOrderStatus:
+      type: string
+      enum: [NEEDS_REVIEW, READY, APPROVED, PUSHED, FAILED, REJECTED]
+
+    DraftOrderLine:
+      type: object
+      required: [id, draft_order_id, line_no, qty, match_status, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        draft_order_id:
+          type: string
+          format: uuid
+        line_no:
+          type: integer
+        customer_sku_raw:
+          type: string
+          nullable: true
+        customer_sku_norm:
+          type: string
+          nullable: true
+        product_description:
+          type: string
+          nullable: true
+        qty:
+          type: number
+          format: float
+        uom:
+          type: string
+          nullable: true
+        unit_price:
+          type: number
+          format: float
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        internal_sku:
+          type: string
+          nullable: true
+        match_confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          nullable: true
+        match_method:
+          type: string
+          enum: [exact_mapping, hybrid, trigram, embedding]
+          nullable: true
+        match_status:
+          $ref: '#/components/schemas/MatchStatus'
+        match_debug_json:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchCandidate'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    MatchStatus:
+      type: string
+      enum: [MATCHED, SUGGESTED, UNMATCHED, OVERRIDDEN]
+
+    MatchCandidate:
+      type: object
+      required: [sku, name, confidence, method, features]
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        method:
+          type: string
+          enum: [exact_mapping, hybrid, trigram, embedding]
+        features:
+          type: object
+          additionalProperties: true
+
+    CustomerCandidate:
+      type: object
+      required: [customer_id, customer_name, score, signals, status]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        customer_name:
+          type: string
+        customer_erp_number:
+          type: string
+          nullable: true
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        signals:
+          type: object
+          additionalProperties: true
+        status:
+          type: string
+          enum: [SELECTED, REJECTED, PENDING]
+
+    ValidationIssue:
+      type: object
+      required: [id, draft_order_id, issue_type, severity, message, is_blocking, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        draft_order_id:
+          type: string
+          format: uuid
+        line_id:
+          type: string
+          format: uuid
+          nullable: true
+        issue_type:
+          $ref: '#/components/schemas/IssueType'
+        severity:
+          $ref: '#/components/schemas/IssueSeverity'
+        message:
+          type: string
+        details_json:
+          type: object
+          additionalProperties: true
+          nullable: true
+        is_blocking:
+          type: boolean
+        acknowledged_by_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        acknowledged_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    IssueType:
+      type: string
+      enum:
+        - MISSING_CUSTOMER
+        - CUSTOMER_AMBIGUOUS
+        - UNKNOWN_PRODUCT
+        - LOW_CONFIDENCE_MATCH
+        - MISSING_PRICE
+        - PRICE_MISMATCH
+        - UOM_INCOMPATIBLE
+        - INVALID_QTY
+        - INVALID_DATE
+
+    IssueSeverity:
+      type: string
+      enum: [ERROR, WARNING, INFO]
+
+    Product:
+      type: object
+      required: [id, org_id, internal_sku, name, base_uom, active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        internal_sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        base_uom:
+          type: string
+        uom_conversions_json:
+          type: object
+          additionalProperties: true
+        active:
+          type: boolean
+        attributes_json:
+          type: object
+          additionalProperties: true
+
+    UpdateDraftHeaderDTO:
+      type: object
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        external_order_number:
+          type: string
+          nullable: true
+        order_date:
+          type: string
+          format: date
+          nullable: true
+        currency:
+          type: string
+          enum: [EUR, CHF, USD]
+        requested_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    UpdateDraftLineDTO:
+      type: object
+      properties:
+        customer_sku_raw:
+          type: string
+        product_description:
+          type: string
+        qty:
+          type: number
+          format: float
+          minimum: 0
+        uom:
+          type: string
+        unit_price:
+          type: number
+          format: float
+          minimum: 0
+        currency:
+          type: string
+        internal_sku:
+          type: string
+          nullable: true
+
+    ConfirmMappingDTO:
+      type: object
+      required: [line_id, internal_sku]
+      properties:
+        line_id:
+          type: string
+          format: uuid
+        internal_sku:
+          type: string
+
+    ConfirmCustomerDTO:
+      type: object
+      required: [customer_id]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+
+    RetryWithAIDTO:
+      type: object
+      properties:
+        force_rerun:
+          type: boolean
+          default: false
+
+    ValidationResult:
+      type: object
+      required: [issues_count, blocking_issues_count, issues]
+      properties:
+        issues_count:
+          type: integer
+        blocking_issues_count:
+          type: integer
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+
+    ProductSearchResult:
+      type: object
+      required: [products, total]
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        total:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    BudgetError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            current_usage:
+              type: number
+              format: float
+            daily_budget:
+              type: number
+              format: float
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

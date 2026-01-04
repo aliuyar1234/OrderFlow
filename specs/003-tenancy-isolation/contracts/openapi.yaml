@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Tenancy Isolation API
+  version: 1.0.0
+  description: Organization settings management
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /org/settings:
+    get:
+      summary: Get organization settings
+      operationId: getOrgSettings
+      tags: [Organization]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Organization settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgSettings'
+
+    patch:
+      summary: Update organization settings (ADMIN only)
+      operationId: updateOrgSettings
+      tags: [Organization]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgSettingsUpdate'
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  settings:
+                    $ref: '#/components/schemas/OrgSettings'
+        '400':
+          description: Invalid settings
+        '403':
+          description: Forbidden (not ADMIN)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    OrgSettings:
+      type: object
+      properties:
+        default_currency:
+          type: string
+          example: EUR
+        price_tolerance_percent:
+          type: number
+          example: 5.0
+        require_unit_price:
+          type: boolean
+        matching:
+          $ref: '#/components/schemas/MatchingSettings'
+        customer_detection:
+          $ref: '#/components/schemas/CustomerDetectionSettings'
+        ai:
+          $ref: '#/components/schemas/AISettings'
+        extraction:
+          $ref: '#/components/schemas/ExtractionSettings'
+
+    MatchingSettings:
+      type: object
+      properties:
+        auto_apply_threshold:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+        auto_apply_gap:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+
+    CustomerDetectionSettings:
+      type: object
+      properties:
+        auto_select_threshold:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+        require_manual_review_if_multiple:
+          type: boolean
+
+    AISettings:
+      type: object
+      properties:
+        llm_provider:
+          type: string
+        llm_model:
+          type: string
+        llm_budget_daily_usd:
+          type: number
+          minimum: 0.0
+        vision_enabled:
+          type: boolean
+        vision_max_pages:
+          type: integer
+          minimum: 1
+
+    ExtractionSettings:
+      type: object
+      properties:
+        min_text_coverage_for_rule:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+        max_pages_rule_based:
+          type: integer
+          minimum: 1
+        llm_on_extraction_failure:
+          type: boolean
+
+    OrgSettingsUpdate:
+      type: object
+      description: Partial update (any subset of OrgSettings fields)
+      additionalProperties: true

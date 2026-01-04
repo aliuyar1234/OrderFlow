@@ -1,0 +1,11 @@
+name,erp_customer_number,email,default_currency,default_language,billing_street,billing_city,billing_postal_code,billing_country,shipping_street,shipping_city,shipping_postal_code,shipping_country,contact_email,contact_name,contact_phone,contact_is_primary,notes
+"Muster GmbH",4711,info@muster.de,EUR,de-DE,"Musterstraße 1",München,80331,DE,"Musterstraße 1",München,80331,DE,einkauf@muster.de,"Max Mustermann",+49-89-123456,true,"Wichtiger Kunde - Monatliche Abrechnung"
+"Schmidt AG",4712,kontakt@schmidt.de,EUR,de-DE,"Hauptstraße 42",Hamburg,20095,DE,"Lagerstraße 5",Hamburg,20097,DE,bestellung@schmidt.de,"Anna Schmidt",+49-40-987654,true,"Rabattgruppe A"
+"Meier & Söhne",4713,office@meier-soehne.at,EUR,de-AT,"Wiener Straße 88",Wien,1010,AT,"Wiener Straße 88",Wien,1010,AT,einkauf@meier-soehne.at,"Franz Meier",+43-1-555-1234,true,""
+"Müller Handels AG",4714,info@mueller-handel.ch,CHF,de-CH,"Bahnhofstraße 15",Zürich,8001,CH,"Industrieweg 23",Zürich,8005,CH,procurement@mueller-handel.ch,"Hans Müller",+41-44-111-2222,true,"Zahlungsziel 30 Tage"
+"Weber Distribution",4715,contact@weber-dist.de,EUR,de-DE,"Gewerbepark 7",Berlin,10115,DE,"Gewerbepark 7",Berlin,10115,DE,orders@weber-dist.de,"Lisa Weber",+49-30-555-9999,true,""
+"Fischer Großhandel",4716,info@fischer.de,EUR,de-DE,"Marktplatz 3",Frankfurt,60311,DE,"Logistikzentrum Nord",Frankfurt,60313,DE,einkauf@fischer.de,"Thomas Fischer",+49-69-777-8888,true,"Sammelrechnung monatlich"
+"Bauer Industrie GmbH",4717,sales@bauer.at,EUR,de-AT,"Industrieallee 99",Graz,8010,AT,"Industrieallee 99",Graz,8010,AT,purchasing@bauer.at,"Maria Bauer",+43-316-444-5555,true,""
+"Schneider Logistik",4718,contact@schneider-log.ch,CHF,de-CH,"Hafenstraße 11",Basel,4001,CH,"Hafenstraße 11",Basel,4001,CH,orders@schneider-log.ch,"Peter Schneider",+41-61-222-3333,true,"Express-Lieferung bevorzugt"
+"Koch & Partner",4719,info@koch-partner.de,EUR,de-DE,"Bergstraße 77",Stuttgart,70173,DE,"Bergstraße 77",Stuttgart,70173,DE,procurement@koch-partner.de,"Stefan Koch",+49-711-666-7777,true,""
+"Hoffmann Trading",4720,contact@hoffmann.de,EUR,de-DE,"Seestraße 23",Düsseldorf,40210,DE,"Seestraße 23",Düsseldorf,40210,DE,einkauf@hoffmann.de,"Julia Hoffmann",+49-211-888-9999,true,"VIP Kunde"

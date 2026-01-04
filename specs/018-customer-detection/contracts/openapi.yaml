@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: Customer Detection API
+  description: API endpoints for customer detection and manual customer selection
+  version: 1.0.0
+
+paths:
+  /draft-orders/{id}/select-customer:
+    post:
+      summary: Manually select customer for draft order
+      description: |
+        Operator manually selects a customer from candidates or searches for a customer.
+        Updates draft_order.customer_id, sets customer_confidence, updates candidate status,
+        resolves CUSTOMER_AMBIGUOUS issue, and creates feedback event.
+      operationId: selectCustomer
+      tags:
+        - Draft Orders
+        - Customer Detection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Draft order ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_id
+              properties:
+                customer_id:
+                  type: string
+                  format: uuid
+                  description: Selected customer ID
+                source:
+                  type: string
+                  enum: [candidate, search]
+                  description: How customer was selected (from candidate list or manual search)
+                  default: candidate
+            examples:
+              selectFromCandidate:
+                summary: Select from candidate list
+                value:
+                  customer_id: "123e4567-e89b-12d3-a456-426614174000"
+                  source: "candidate"
+              selectFromSearch:
+                summary: Select via manual search
+                value:
+                  customer_id: "123e4567-e89b-12d3-a456-426614174999"
+                  source: "search"
+      responses:
+        '200':
+          description: Customer selected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Draft order ID
+                  customer_id:
+                    type: string
+                    format: uuid
+                    description: Selected customer ID
+                  customer_confidence:
+                    type: number
+                    format: float
+                    minimum: 0.0
+                    maximum: 0.999
+                    description: Confidence in customer selection
+                  status:
+                    type: string
+                    description: Draft status (NEEDS_REVIEW → READY if no other blockers)
+                  customer:
+                    $ref: '#/components/schemas/Customer'
+                  candidates_updated:
+                    type: integer
+                    description: Number of candidate records updated
+              example:
+                id: "223e4567-e89b-12d3-a456-426614174001"
+                customer_id: "123e4567-e89b-12d3-a456-426614174000"
+                customer_confidence: 0.93
+                status: "READY"
+                customer:
+                  id: "123e4567-e89b-12d3-a456-426614174000"
+                  name: "Muster GmbH"
+                  erp_customer_number: "CUST-4711"
+                candidates_updated: 3
+        '400':
+          description: Bad request (invalid customer_id, customer not in org)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "INVALID_CUSTOMER"
+                message: "Customer does not belong to this organization"
+        '404':
+          description: Draft order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "NOT_FOUND"
+                message: "Draft order not found"
+        '409':
+          description: Conflict (draft already has customer_id set and no CUSTOMER_AMBIGUOUS issue)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "CUSTOMER_ALREADY_SET"
+                message: "Customer is already set. Use update endpoint to change."
+
+  /draft-orders/{id}:
+    get:
+      summary: Get draft order with customer detection data
+      description: |
+        Retrieve draft order including customer_candidates_json for UI rendering.
+        Includes validation_issues to check for CUSTOMER_AMBIGUOUS.
+      operationId: getDraftOrder
+      tags:
+        - Draft Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Draft order ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Draft order with customer detection metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrderWithDetection'
+              example:
+                id: "223e4567-e89b-12d3-a456-426614174001"
+                org_id: "323e4567-e89b-12d3-a456-426614174002"
+                status: "NEEDS_REVIEW"
+                customer_id: null
+                customer_confidence: 0.0
+                customer_candidates_json:
+                  - customer_id: "123e4567-e89b-12d3-a456-426614174000"
+                    name: "Muster GmbH"
+                    score: 0.93
+                    signals:
+                      from_email_exact: true
+                      from_domain: "muster.com"
+                  - customer_id: "123e4567-e89b-12d3-a456-426614174111"
+                    name: "Muster GmbH & Co. KG"
+                    score: 0.75
+                    signals:
+                      from_domain: "muster.com"
+                validation_issues:
+                  - id: "423e4567-e89b-12d3-a456-426614174003"
+                    type: "CUSTOMER_AMBIGUOUS"
+                    severity: "ERROR"
+                    status: "OPEN"
+                    message: "Multiple customers match detection signals"
+                    details:
+                      candidate_count: 2
+                lines: []
+                created_at: "2025-12-27T10:00:00Z"
+
+components:
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        erp_customer_number:
+          type: string
+          nullable: true
+
+    CustomerCandidate:
+      type: object
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Denormalized customer name for UI
+        score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 0.999
+        signals:
+          type: object
+          description: Signal provenance (which signals triggered)
+          additionalProperties: true
+          example:
+            from_email_exact: true
+            from_domain: "acme.com"
+            doc_erp_number: "4711"
+
+    ValidationIssue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          description: Issue type (e.g., CUSTOMER_AMBIGUOUS, UNKNOWN_PRODUCT)
+        severity:
+          type: string
+          enum: [INFO, WARNING, ERROR]
+        status:
+          type: string
+          enum: [OPEN, ACKNOWLEDGED, RESOLVED, OVERRIDDEN]
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+    DraftOrderWithDetection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [NEEDS_REVIEW, READY, APPROVED, PUSHED]
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        customer_confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 0.999
+          nullable: true
+        customer_candidates_json:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerCandidate'
+          description: Top 5 candidates for UI display
+        validation_issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+        lines:
+          type: array
+          items:
+            type: object
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context

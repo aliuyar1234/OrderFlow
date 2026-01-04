@@ -1,0 +1,74 @@
+# Inbox UI API Client Specification
+
+InboxAPI:
+  baseUrl: /api/v1
+
+  endpoints:
+    - name: listInbox
+      path: /inbox
+      method: GET
+      description: Fetch paginated inbox list
+      queryParams:
+        status: InboundMessageStatus (optional)
+        from_email: string (optional)
+        date_from: ISO date (optional)
+        date_to: ISO date (optional)
+        q: search query (optional)
+        limit: number (default 50, max 100)
+        cursor: pagination cursor (optional)
+      response:
+        items: InboxItem[]
+        next_cursor?: string
+
+    - name: getMessage
+      path: /inbox/{id}
+      method: GET
+      description: Fetch message detail
+      pathParams:
+        id: UUID
+      response: MessageDetail
+
+    - name: downloadDocument
+      path: /documents/{id}/download
+      method: GET
+      description: Download document file
+      pathParams:
+        id: UUID
+      response: Binary (file stream)
+
+    - name: previewDocument
+      path: /documents/{id}/preview
+      method: GET
+      description: Get preview image (if available)
+      pathParams:
+        id: UUID
+      response: Image (JPEG)
+
+TypeDefinitions:
+  InboxItem:
+    id: string
+    source: 'EMAIL' | 'UPLOAD'
+    from_email?: string
+    to_email?: string
+    subject?: string
+    received_at: string (ISO timestamp)
+    status: InboundMessageStatus
+    attachment_count: number
+    draft_order_ids: string[]
+    created_at: string
+
+  MessageDetail:
+    ...InboxItem
+    source_message_id?: string
+    attachments: Attachment[]
+    draft_orders: DraftOrderSummary[]
+
+  Attachment:
+    document_id: string
+    file_name: string
+    mime_type: string
+    size_bytes: number
+    status: DocumentStatus
+    page_count?: number
+    preview_url?: string
+    download_url: string

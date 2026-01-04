@@ -1,0 +1,30 @@
+# Inbound Channel Port Interface
+
+InboundChannelPort:
+  description: Port interface for inbound order channels (Email, Upload, EDI, API)
+
+  methods:
+    - name: receive_message
+      description: Process incoming message and create inbound_message record
+      parameters:
+        - name: envelope
+          type: MessageEnvelope
+          description: Message metadata and content
+      returns:
+        type: InboundMessage
+        description: Created inbound message entity
+      errors:
+        - UNKNOWN_ORG: Organization not found
+        - DUPLICATE_MESSAGE: Message already processed
+        - STORAGE_ERROR: Failed to store raw message
+
+MessageEnvelope:
+  fields:
+    org_id: UUID
+    source: string  # EMAIL, UPLOAD, EDI, API
+    source_message_id: string  # Email Message-ID or correlation ID
+    from_address: string
+    to_address: string
+    subject: string
+    received_at: datetime
+    raw_content: bytes  # Raw MIME or upload content

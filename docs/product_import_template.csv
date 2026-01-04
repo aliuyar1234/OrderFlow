@@ -1,0 +1,4 @@
+internal_sku,name,base_uom,description,manufacturer,ean,category,uom_conversions
+PROD-001,Sample Product 1,ST,This is a sample product,ACME Corp,1234567890123,Electronics,"{""KAR"":{""to_base"":12},""PAL"":{""to_base"":480}}"
+PROD-002,Sample Product 2,KG,Another sample product,Beta Industries,9876543210987,Materials,
+PROD-003,Sample Product 3,L,Liquid product example,Gamma LLC,1111222233334,Chemicals,"{""ML"":{""to_base"":0.001}}"

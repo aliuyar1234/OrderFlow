@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: Customer Prices API
+  version: 1.0.0
+
+paths:
+  /imports/customer-prices:
+    post:
+      summary: Import customer prices from CSV
+      operationId: importCustomerPrices
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows_processed:
+                    type: integer
+                  rows_succeeded:
+                    type: integer
+                  rows_failed:
+                    type: integer
+                  error_report_url:
+                    type: string
+                    nullable: true
+
+  /customer-prices:
+    get:
+      summary: Query customer prices
+      operationId: getCustomerPrices
+      parameters:
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: internal_sku
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of prices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerPrice'
+
+components:
+  schemas:
+    CustomerPrice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        internal_sku:
+          type: string
+        currency:
+          type: string
+        uom:
+          type: string
+        unit_price:
+          type: number
+          format: decimal
+        min_qty:
+          type: number
+          format: decimal
+        valid_from:
+          type: string
+          format: date
+          nullable: true
+        valid_to:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]

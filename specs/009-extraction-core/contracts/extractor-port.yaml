@@ -1,0 +1,76 @@
+# Extractor Port Interface
+
+ExtractorPort:
+  description: Port interface for document extraction (rule-based, LLM, hybrid)
+
+  methods:
+    - name: extract
+      description: Extract structured order data from document
+      parameters:
+        - name: document
+          type: Document
+          description: Document entity with storage_key for file retrieval
+      returns:
+        type: ExtractionResult
+        description: Extraction result with canonical output or error
+        schema:
+          success: boolean
+          output: CanonicalExtractionOutput (nullable)
+          error: string (nullable)
+          confidence: float (0.0-1.0)
+          metrics:
+            runtime_ms: number
+            page_count: number (optional)
+            row_count: number (optional)
+
+    - name: supports
+      description: Check if extractor supports given MIME type
+      parameters:
+        - name: mime_type
+          type: string
+      returns:
+        type: boolean
+
+  properties:
+    - name: version
+      type: string
+      description: Extractor version identifier
+      examples:
+        - excel_v1
+        - csv_v1
+        - pdf_rule_v1
+        - pdf_llm_v2
+
+ExtractionResult:
+  fields:
+    success: boolean
+    output: CanonicalExtractionOutput (if success=true)
+    error: string (if success=false)
+    confidence: float
+    metrics: dict
+
+CanonicalExtractionOutput:
+  fields:
+    order: ExtractionOrderHeader
+    lines: ExtractionLineItem[]
+    metadata: dict
+
+ExtractionOrderHeader:
+  fields:
+    order_number: string (optional)
+    order_date: date (optional)
+    currency: string (optional)
+    delivery_date: date (optional)
+    ship_to: dict (optional)
+    bill_to: dict (optional)
+    notes: string (optional)
+
+ExtractionLineItem:
+  fields:
+    line_no: integer
+    customer_sku: string (optional)
+    description: string (optional)
+    qty: decimal (optional)
+    uom: string (optional)
+    unit_price: decimal (optional)
+    currency: string (optional)

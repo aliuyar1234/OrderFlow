@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: LLM Extraction API
+  description: API endpoints for LLM-based document extraction (text + vision)
+  version: 1.0.0
+
+paths:
+  /extraction-runs/{runId}/retry-with-llm:
+    post:
+      summary: Retry extraction with LLM
+      description: Force LLM extraction (bypass rule-based, bypass cache)
+      operationId: retryWithLLM
+      tags:
+        - Extraction
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force_vision:
+                  type: boolean
+                  default: false
+                  description: Force vision LLM even if text_coverage_ratio >= 0.15
+      responses:
+        '202':
+          description: LLM extraction triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extraction_run_id:
+                    type: string
+                    format: uuid
+                  extractor_version:
+                    type: string
+                    example: llm_v1
+
+  /feedback-events:
+    post:
+      summary: Record user correction
+      description: Store feedback for few-shot learning
+      operationId: recordFeedback
+      tags:
+        - Feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackEventCreate'
+      responses:
+        '201':
+          description: Feedback recorded
+
+components:
+  schemas:
+    FeedbackEventCreate:
+      type: object
+      required:
+        - event_type
+        - draft_order_id
+        - before_json
+        - after_json
+      properties:
+        event_type:
+          type: string
+          enum: [EXTRACTION_LINE_CORRECTED, CUSTOMER_CORRECTED, MATCH_CORRECTED]
+        document_id:
+          type: string
+          format: uuid
+          nullable: true
+        draft_order_id:
+          type: string
+          format: uuid
+        before_json:
+          type: object
+          description: State before correction
+        after_json:
+          type: object
+          description: State after correction

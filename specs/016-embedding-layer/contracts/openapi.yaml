@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Embedding API
+  description: Embedding generation and vector search (internal/admin endpoints)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+
+paths:
+  /embeddings/rebuild:
+    post:
+      summary: Rebuild all embeddings for org
+      operationId: rebuildEmbeddings
+      parameters:
+        - name: force_recompute
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '202':
+          description: Rebuild job enqueued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  total_products:
+                    type: integer
+
+  /embeddings/status:
+    get:
+      summary: Get embedding status for org
+      operationId: getEmbeddingStatus
+      responses:
+        '200':
+          description: Embedding statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbeddingStatus'
+
+components:
+  schemas:
+    EmbeddingStatus:
+      type: object
+      properties:
+        total_products:
+          type: integer
+        embedded_products:
+          type: integer
+        pending_products:
+          type: integer
+        embedding_model:
+          type: string
+        last_embedding_at:
+          type: string
+          format: date-time

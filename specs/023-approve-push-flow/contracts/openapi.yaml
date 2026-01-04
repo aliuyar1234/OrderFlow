@@ -1,0 +1,231 @@
+openapi: 3.1.0
+info:
+  title: OrderFlow - Approve & Push Flow API
+  version: 1.0.0
+  description: API endpoints for approving drafts and pushing to ERP
+
+paths:
+  /draft-orders/{id}/approve:
+    post:
+      summary: Approve a draft order
+      description: |
+        Approve a READY draft order to confirm data accuracy and authorize for ERP export.
+        Only OPERATOR role and above can approve.
+      operationId: approveDraftOrder
+      tags:
+        - Draft Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Draft order ID
+      responses:
+        '200':
+          description: Draft successfully approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveResponse'
+        '401':
+          description: Unauthorized - invalid or missing JWT
+        '403':
+          description: Forbidden - user lacks OPERATOR role
+        '404':
+          description: Draft not found or belongs to different org
+        '409':
+          description: Conflict - draft not in READY status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                detail: "Draft must be READY to approve (current: NEEDS_REVIEW)"
+      security:
+        - bearerAuth: []
+
+  /draft-orders/{id}/push:
+    post:
+      summary: Push approved draft to ERP
+      description: |
+        Push an APPROVED draft to trigger export JSON generation and dropzone delivery.
+        Supports idempotent retries via Idempotency-Key header.
+      operationId: pushDraftOrder
+      tags:
+        - Draft Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Draft order ID
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: |
+            UUID for idempotent retries. If provided, duplicate requests within 24 hours
+            will return the same export_id without creating new export.
+      responses:
+        '200':
+          description: Export job created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushResponse'
+        '202':
+          description: Export already in progress (idempotent retry)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushInProgressResponse'
+        '400':
+          description: Bad request - no active ERP connector configured
+        '401':
+          description: Unauthorized - invalid or missing JWT
+        '403':
+          description: Forbidden - user lacks OPERATOR role
+        '404':
+          description: Draft not found or belongs to different org
+        '409':
+          description: Conflict - draft not in APPROVED status or export already in progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notApproved:
+                  value:
+                    detail: "Draft must be APPROVED to push (current: NEEDS_REVIEW)"
+                alreadyPushing:
+                  value:
+                    detail: "Export already in progress or completed"
+      security:
+        - bearerAuth: []
+
+  /draft-orders/{id}/retry-push:
+    post:
+      summary: Retry failed export
+      description: |
+        Retry pushing a draft that failed during export. Creates a new export attempt.
+        Only available for drafts in ERROR status.
+      operationId: retryPushDraftOrder
+      tags:
+        - Draft Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Draft order ID
+      responses:
+        '200':
+          description: Retry export job created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushResponse'
+        '401':
+          description: Unauthorized - invalid or missing JWT
+        '403':
+          description: Forbidden - user lacks OPERATOR role
+        '404':
+          description: Draft not found or belongs to different org
+        '409':
+          description: Conflict - draft not in ERROR status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                detail: "Export already succeeded"
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    ApproveResponse:
+      type: object
+      required:
+        - id
+        - status
+        - approved_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Draft order ID
+        status:
+          type: string
+          enum: [APPROVED]
+          description: Draft status after approval
+        approved_at:
+          type: string
+          format: date-time
+          description: Timestamp when draft was approved
+      example:
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        status: "APPROVED"
+        approved_at: "2025-12-27T10:30:00Z"
+
+    PushResponse:
+      type: object
+      required:
+        - erp_export_id
+        - status
+      properties:
+        erp_export_id:
+          type: string
+          format: uuid
+          description: ID of created export job
+        status:
+          type: string
+          enum: [PUSHING]
+          description: Draft status after push initiated
+      example:
+        erp_export_id: "660f9511-f3ac-52e5-b827-557766551111"
+        status: "PUSHING"
+
+    PushInProgressResponse:
+      type: object
+      required:
+        - erp_export_id
+        - status
+      properties:
+        erp_export_id:
+          type: string
+          format: uuid
+          description: ID of existing export job (from first request)
+        status:
+          type: string
+          enum: [in_progress, SENT, FAILED]
+          description: Current export status
+      example:
+        erp_export_id: "660f9511-f3ac-52e5-b827-557766551111"
+        status: "in_progress"
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+      example:
+        detail: "Draft must be APPROVED to push (current: NEEDS_REVIEW)"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint

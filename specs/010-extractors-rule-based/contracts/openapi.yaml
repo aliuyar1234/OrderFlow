@@ -1,0 +1,433 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Extraction API
+  description: API endpoints for rule-based document extraction (CSV, Excel, PDF)
+  version: 1.0.0
+  contact:
+    name: OrderFlow Team
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+  - url: https://api.orderflow.example.com/api
+    description: Production
+
+security:
+  - bearerAuth: []
+
+paths:
+  /documents/upload:
+    post:
+      summary: Upload document and trigger extraction
+      description: Upload a document file (CSV, XLSX, PDF) and automatically trigger rule-based extraction
+      operationId: uploadDocument
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file (CSV, XLSX, PDF)
+                org_id:
+                  type: string
+                  format: uuid
+                  description: Organization ID (extracted from JWT if not provided)
+      responses:
+        '201':
+          description: Document uploaded successfully, extraction triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: File too large (max 25MB)
+
+  /extraction-runs/{documentId}/latest:
+    get:
+      summary: Get latest extraction run for document
+      description: Retrieve the most recent extraction run for a given document
+      operationId: getLatestExtractionRun
+      tags:
+        - Extraction
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Extraction run retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionRun'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /extraction-runs/{runId}:
+    get:
+      summary: Get extraction run details
+      description: Retrieve details of a specific extraction run
+      operationId: getExtractionRun
+      tags:
+        - Extraction
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Extraction run details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionRun'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /extraction-runs/{runId}/output:
+    get:
+      summary: Get canonical extraction output
+      description: Retrieve the structured extraction output in canonical JSON format (§7.1)
+      operationId: getExtractionOutput
+      tags:
+        - Extraction
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Extraction output
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanonicalExtractionOutput'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /extraction-runs/{runId}/retry:
+    post:
+      summary: Retry extraction with different extractor
+      description: Re-run extraction on the same document with a specified extractor version
+      operationId: retryExtraction
+      tags:
+        - Extraction
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                extractor_version:
+                  type: string
+                  enum: [rule_v1, llm_v1]
+                  description: Extractor version to use
+      responses:
+        '202':
+          description: Extraction retry triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DocumentUploadResponse:
+      type: object
+      required:
+        - document_id
+        - filename
+        - mime_type
+        - extraction_run_id
+      properties:
+        document_id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        mime_type:
+          type: string
+          example: text/csv
+        file_size_bytes:
+          type: integer
+        extraction_run_id:
+          type: string
+          format: uuid
+          description: ID of the triggered extraction run
+
+    ExtractionRun:
+      type: object
+      required:
+        - id
+        - org_id
+        - document_id
+        - extractor_version
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        document_id:
+          type: string
+          format: uuid
+        extractor_version:
+          type: string
+          enum: [rule_v1, llm_v1]
+        status:
+          type: string
+          enum: [NEW, RUNNING, SUCCEEDED, FAILED]
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        runtime_ms:
+          type: integer
+          nullable: true
+          description: Processing duration in milliseconds
+        lines_extracted:
+          type: integer
+          description: Number of order lines extracted
+        extraction_confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          nullable: true
+          description: Overall extraction confidence score
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        error_json:
+          type: object
+          nullable: true
+          description: Error details if status=FAILED
+
+    CanonicalExtractionOutput:
+      type: object
+      required:
+        - extractor_version
+        - order
+        - lines
+        - confidence
+        - warnings
+      properties:
+        extractor_version:
+          type: string
+          example: rule_v1
+        order:
+          $ref: '#/components/schemas/OrderHeader'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLine'
+          maxItems: 500
+        confidence:
+          $ref: '#/components/schemas/ConfidenceScores'
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Column 'notes' was unmapped"
+            - "Line 5: qty field contains non-numeric text"
+        metadata:
+          type: object
+          description: Extractor-specific metadata
+          properties:
+            separator_detected:
+              type: string
+              example: ";"
+            decimal_format:
+              type: string
+              example: ","
+            header_rows_skipped:
+              type: integer
+            unmapped_columns:
+              type: array
+              items:
+                type: string
+
+    OrderHeader:
+      type: object
+      properties:
+        external_order_number:
+          type: string
+          nullable: true
+        order_date:
+          type: string
+          format: date
+          nullable: true
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: EUR
+          nullable: true
+        customer_hint:
+          type: string
+          nullable: true
+        requested_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        ship_to:
+          type: object
+          nullable: true
+        bill_to:
+          type: object
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    OrderLine:
+      type: object
+      required:
+        - line_no
+      properties:
+        line_no:
+          type: integer
+          minimum: 1
+        customer_sku_raw:
+          type: string
+          nullable: true
+        product_description:
+          type: string
+          nullable: true
+        qty:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1000000
+          nullable: true
+        uom:
+          type: string
+          nullable: true
+          example: ST
+        unit_price:
+          type: number
+          format: float
+          nullable: true
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          nullable: true
+        requested_delivery_date:
+          type: string
+          format: date
+          nullable: true
+
+    ConfidenceScores:
+      type: object
+      required:
+        - overall
+        - order
+        - lines
+      properties:
+        overall:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+        order:
+          type: object
+          description: Per-field confidence for header
+          additionalProperties:
+            type: number
+            format: float
+            minimum: 0.0
+            maximum: 1.0
+        lines:
+          type: array
+          description: Per-field confidence for each line
+          items:
+            type: object
+            additionalProperties:
+              type: number
+              format: float
+              minimum: 0.0
+              maximum: 1.0
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              detail:
+                type: string
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Resource not found

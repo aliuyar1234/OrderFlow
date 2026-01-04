@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Dropzone Connector API
+  version: 1.0.0
+
+paths:
+  /draft-orders/{id}/retry-push:
+    post:
+      summary: Retry failed export
+      operationId: retryPush
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Retry queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draft_order_id:
+                    type: string
+                    format: uuid
+                  export_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [PENDING]
+        '409':
+          description: Export already succeeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+  /erp-exports:
+    get:
+      summary: List exports for org
+      operationId: listExports
+      parameters:
+        - name: draft_order_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, SENT, ACKED, FAILED]
+      responses:
+        '200':
+          description: List of exports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ERPExport'
+
+components:
+  schemas:
+    ERPExport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        draft_order_id:
+          type: string
+          format: uuid
+        export_format_version:
+          type: string
+        export_storage_key:
+          type: string
+        dropzone_path:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING, SENT, ACKED, FAILED]
+        erp_order_id:
+          type: string
+          nullable: true
+        error_json:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time

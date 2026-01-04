@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: Document Upload API
+  version: 1.0.0
+  description: API for manual document upload
+
+paths:
+  /api/v1/uploads:
+    post:
+      summary: Upload documents
+      description: Upload one or more PDF/Excel/CSV files for processing
+      operationId: uploadDocuments
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  minItems: 1
+                  maxItems: 10
+      responses:
+        '201':
+          description: Files uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Invalid file type or format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+        '403':
+          description: Forbidden (VIEWER role cannot upload)
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UploadResponse:
+      type: object
+      properties:
+        uploaded:
+          type: array
+          items:
+            $ref: '#/components/schemas/UploadedDocument'
+        failed:
+          type: array
+          items:
+            $ref: '#/components/schemas/UploadFailure'
+
+    UploadedDocument:
+      type: object
+      properties:
+        document_id:
+          type: string
+          format: uuid
+        file_name:
+          type: string
+        size_bytes:
+          type: integer
+        sha256:
+          type: string
+          minLength: 64
+          maxLength: 64
+        status:
+          type: string
+          enum: [UPLOADED, STORED, PROCESSING, EXTRACTED, FAILED]
+        is_duplicate:
+          type: boolean
+
+    UploadFailure:
+      type: object
+      properties:
+        file_name:
+          type: string
+        error:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object

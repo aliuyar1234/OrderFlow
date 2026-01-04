@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Catalog & Products API
+  description: Product catalog management and import endpoints
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+
+paths:
+  /products:
+    get:
+      summary: Search products
+      operationId: searchProducts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Product search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSearchResult'
+
+  /products/{product_id}:
+    patch:
+      summary: Update product
+      operationId: updateProduct
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductDTO'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /imports/products:
+    post:
+      summary: Import products from CSV
+      operationId: importProducts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+
+  /imports/customer-prices:
+    post:
+      summary: Import customer prices from CSV
+      operationId: importCustomerPrices
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required: [id, org_id, internal_sku, name, base_uom, active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        internal_sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        base_uom:
+          type: string
+        uom_conversions_json:
+          type: object
+        active:
+          type: boolean
+        attributes_json:
+          type: object
+        updated_source_at:
+          type: string
+          format: date-time
+
+    UpdateProductDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        uom_conversions_json:
+          type: object
+        active:
+          type: boolean
+        attributes_json:
+          type: object
+
+    ImportResult:
+      type: object
+      required: [total_rows, imported_count, error_count, error_rows]
+      properties:
+        total_rows:
+          type: integer
+        imported_count:
+          type: integer
+        error_count:
+          type: integer
+        error_rows:
+          type: array
+          items:
+            type: object
+        error_csv_url:
+          type: string
+          nullable: true
+
+    ProductSearchResult:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        total:
+          type: integer

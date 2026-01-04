@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: Draft Orders API
+  description: API endpoints for draft order management and state machine
+  version: 1.0.0
+
+paths:
+  /draft-orders:
+    get:
+      summary: List draft orders
+      operationId: listDraftOrders
+      tags:
+        - Draft Orders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [NEW, EXTRACTED, NEEDS_REVIEW, READY, APPROVED, PUSHING, PUSHED, REJECTED, ERROR]
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [confidence_asc, confidence_desc, created_asc, created_desc]
+            default: created_desc
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of draft orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DraftOrder'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /draft-orders/{draftId}:
+    get:
+      summary: Get draft order details
+      operationId: getDraftOrder
+      tags:
+        - Draft Orders
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Draft order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrderDetail'
+
+  /draft-orders/{draftId}/approve:
+    post:
+      summary: Approve draft order
+      operationId: approveDraft
+      tags:
+        - Draft Orders
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Draft approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrder'
+
+  /draft-orders/{draftId}/lines:
+    post:
+      summary: Add line to draft
+      operationId: addDraftLine
+      tags:
+        - Draft Lines
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftLineCreate'
+      responses:
+        '201':
+          description: Line added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOrderLine'
+
+  /draft-orders/lines/{lineId}:
+    put:
+      summary: Update draft line
+      operationId: updateDraftLine
+      tags:
+        - Draft Lines
+      parameters:
+        - name: lineId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftLineUpdate'
+      responses:
+        '200':
+          description: Line updated
+
+    delete:
+      summary: Delete draft line
+      operationId: deleteDraftLine
+      tags:
+        - Draft Lines
+      parameters:
+        - name: lineId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Line deleted
+
+components:
+  schemas:
+    DraftOrder:
+      type: object
+      required:
+        - id
+        - org_id
+        - document_id
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        document_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        external_order_number:
+          type: string
+          nullable: true
+        order_date:
+          type: string
+          format: date
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [NEW, EXTRACTED, NEEDS_REVIEW, READY, APPROVED, PUSHING, PUSHED, REJECTED, ERROR]
+        confidence_score:
+          type: number
+          format: float
+          nullable: true
+        ready_check_json:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    DraftOrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/DraftOrder'
+        - type: object
+          properties:
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/DraftOrderLine'
+            issues:
+              type: array
+              items:
+                type: object
+
+    DraftOrderLine:
+      type: object
+      required:
+        - id
+        - draft_order_id
+        - line_no
+      properties:
+        id:
+          type: string
+          format: uuid
+        draft_order_id:
+          type: string
+          format: uuid
+        line_no:
+          type: integer
+        customer_sku_raw:
+          type: string
+          nullable: true
+        product_description:
+          type: string
+          nullable: true
+        qty:
+          type: number
+          nullable: true
+        uom:
+          type: string
+          nullable: true
+        unit_price:
+          type: number
+          nullable: true
+        internal_sku:
+          type: string
+          nullable: true
+        match_status:
+          type: string
+          enum: [UNMATCHED, SUGGESTED, MATCHED, OVERRIDDEN]
+        match_confidence:
+          type: number
+          nullable: true
+
+    DraftLineCreate:
+      type: object
+      required:
+        - customer_sku_raw
+        - qty
+        - uom
+      properties:
+        customer_sku_raw:
+          type: string
+        product_description:
+          type: string
+        qty:
+          type: number
+        uom:
+          type: string
+        unit_price:
+          type: number
+
+    DraftLineUpdate:
+      type: object
+      properties:
+        customer_sku_raw:
+          type: string
+        product_description:
+          type: string
+        qty:
+          type: number
+        uom:
+          type: string
+        unit_price:
+          type: number
+        internal_sku:
+          type: string

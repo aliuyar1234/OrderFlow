@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Canonical Extraction Output",
+  "description": "Standard output schema for all extractors",
+  "type": "object",
+  "required": ["order", "lines"],
+  "properties": {
+    "order": {
+      "type": "object",
+      "description": "Order header information",
+      "properties": {
+        "order_number": {
+          "type": ["string", "null"],
+          "description": "Customer's order/PO number"
+        },
+        "order_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Order date (ISO 8601)"
+        },
+        "currency": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Z]{3}$",
+          "description": "Currency code (ISO 4217)"
+        },
+        "delivery_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Requested delivery date"
+        },
+        "ship_to": {
+          "type": ["object", "null"],
+          "description": "Shipping address"
+        },
+        "bill_to": {
+          "type": ["object", "null"],
+          "description": "Billing address"
+        },
+        "notes": {
+          "type": ["string", "null"],
+          "description": "Additional notes or comments"
+        }
+      }
+    },
+    "lines": {
+      "type": "array",
+      "description": "Order line items",
+      "items": {
+        "type": "object",
+        "required": ["line_no"],
+        "properties": {
+          "line_no": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Line number (1-indexed)"
+          },
+          "customer_sku": {
+            "type": ["string", "null"],
+            "description": "Customer's SKU/article number"
+          },
+          "description": {
+            "type": ["string", "null"],
+            "description": "Product description"
+          },
+          "qty": {
+            "type": ["number", "null"],
+            "description": "Quantity ordered"
+          },
+          "uom": {
+            "type": ["string", "null"],
+            "description": "Unit of measure (e.g., PC, KG, M)"
+          },
+          "unit_price": {
+            "type": ["number", "null"],
+            "description": "Price per unit"
+          },
+          "currency": {
+            "type": ["string", "null"],
+            "pattern": "^[A-Z]{3}$",
+            "description": "Currency code (ISO 4217)"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extractor-specific metadata (optional)",
+      "additionalProperties": true
+    }
+  }
+}

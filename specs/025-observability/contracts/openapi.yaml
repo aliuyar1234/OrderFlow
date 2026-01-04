@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: OrderFlow - Observability API
+  version: 1.0.0
+
+paths:
+  /metrics:
+    get:
+      summary: Prometheus metrics endpoint
+      description: Returns metrics in Prometheus exposition format
+      operationId: getMetrics
+      tags:
+        - Monitoring
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP orderflow_ai_calls_total Total AI API calls
+                # TYPE orderflow_ai_calls_total counter
+                orderflow_ai_calls_total{type="extraction",status="success"} 1234
+
+  /ai/calls:
+    get:
+      summary: Get AI call logs
+      description: Retrieve AI call logs with cost and performance metrics
+      operationId: getAICalls
+      tags:
+        - AI Monitoring
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: call_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [extraction, embedding]
+      responses:
+        '200':
+          description: AI call statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_cost_usd:
+                    type: number
+                    format: float
+                  total_calls:
+                    type: integer
+                  error_rate:
+                    type: number
+                    format: float
+                  latency_percentiles:
+                    type: object
+                    properties:
+                      p50:
+                        type: integer
+                      p95:
+                        type: integer
+                      p99:
+                        type: integer
+                  calls:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        call_type:
+                          type: string
+                        provider:
+                          type: string
+                        model:
+                          type: string
+                        tokens_in:
+                          type: integer
+                        tokens_out:
+                          type: integer
+                        cost_micros:
+                          type: integer
+                        latency_ms:
+                          type: integer
+                        status:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires ADMIN or INTEGRATOR role
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

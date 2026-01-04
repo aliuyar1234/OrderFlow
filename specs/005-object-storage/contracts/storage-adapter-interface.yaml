@@ -1,0 +1,156 @@
+# Storage Adapter Interface Contract
+# This defines the interface that all storage adapters must implement
+
+StorageAdapterInterface:
+  name: ObjectStoragePort
+  description: |
+    Port interface for S3-compatible object storage.
+    All storage adapters (MinIO, AWS S3, etc.) must implement this interface.
+
+  methods:
+    - name: store_file
+      description: |
+        Store a file in object storage with automatic SHA256 calculation and deduplication.
+        Returns existing file if hash already exists (content-addressed storage).
+      parameters:
+        - name: file
+          type: BinaryIO
+          description: File-like object to store
+          required: true
+        - name: org_id
+          type: UUID
+          description: Organization ID for multi-tenant isolation
+          required: true
+        - name: filename
+          type: string
+          description: Original filename (for extension and metadata)
+          required: true
+        - name: mime_type
+          type: string
+          description: MIME type (e.g., "application/pdf")
+          required: true
+      returns:
+        type: StoredFile
+        description: Metadata about stored file
+        schema:
+          storage_key:
+            type: string
+            description: S3 object key (format: {org_id}/{year}/{month}/{sha256}.{ext})
+            example: "a1b2c3d4/2025/12/abc123def456...789.pdf"
+          sha256:
+            type: string
+            description: SHA256 hash in hex format
+            example: "abc123def456...789"
+          size_bytes:
+            type: integer
+            description: File size in bytes
+            example: 123456
+          mime_type:
+            type: string
+            description: MIME type
+            example: "application/pdf"
+      errors:
+        - code: STORAGE_ERROR
+          description: Failed to store file (network, permissions, quota)
+        - code: INVALID_FILE
+          description: File is corrupt or unreadable
+
+    - name: retrieve_file
+      description: Retrieve file from object storage by storage key
+      parameters:
+        - name: storage_key
+          type: string
+          description: S3 object key
+          required: true
+      returns:
+        type: BinaryIO
+        description: File content as binary stream
+      errors:
+        - code: FILE_NOT_FOUND
+          description: File does not exist in storage
+        - code: STORAGE_ERROR
+          description: Failed to retrieve file (network, permissions)
+
+    - name: delete_file
+      description: Delete file from object storage
+      parameters:
+        - name: storage_key
+          type: string
+          description: S3 object key
+          required: true
+      returns:
+        type: boolean
+        description: True if deleted, False if file did not exist
+      errors:
+        - code: STORAGE_ERROR
+          description: Failed to delete file (network, permissions)
+
+    - name: generate_presigned_url
+      description: Generate time-limited presigned URL for direct download
+      parameters:
+        - name: storage_key
+          type: string
+          description: S3 object key
+          required: true
+        - name: expires_in_seconds
+          type: integer
+          description: URL expiration time in seconds
+          required: false
+          default: 3600
+      returns:
+        type: string
+        description: Presigned URL (valid for specified duration)
+        example: "https://s3.amazonaws.com/bucket/key?X-Amz-Signature=..."
+      errors:
+        - code: STORAGE_ERROR
+          description: Failed to generate presigned URL
+
+    - name: file_exists
+      description: Check if file exists in object storage
+      parameters:
+        - name: storage_key
+          type: string
+          description: S3 object key
+          required: true
+      returns:
+        type: boolean
+        description: True if file exists, False otherwise
+      errors:
+        - code: STORAGE_ERROR
+          description: Failed to check file existence (network)
+
+  properties:
+    - name: version
+      type: string
+      description: Adapter version identifier
+      example: "s3_adapter_v1"
+      required: true
+
+# Value Objects
+
+StoredFile:
+  description: Value object returned by store_file containing file metadata
+  fields:
+    storage_key:
+      type: string
+      required: true
+    sha256:
+      type: string
+      required: true
+    size_bytes:
+      type: integer
+      required: true
+    mime_type:
+      type: string
+      required: true
+
+# Implementation Notes
+
+ImplementationNotes:
+  - All methods must be async (async def)
+  - Adapters must handle retries with exponential backoff
+  - Adapters must stream large files (not load into memory)
+  - SHA256 calculation must happen during upload (single pass)
+  - Deduplication check (file_exists) must happen before upload
+  - Presigned URLs must be time-limited (default 1 hour)
+  - All errors must be logged with structured context (org_id, storage_key, error details)

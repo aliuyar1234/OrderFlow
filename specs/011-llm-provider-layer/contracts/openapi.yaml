@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: LLM Provider Interface
+  description: Internal interface definition for LLM provider abstraction layer
+  version: 1.0.0
+
+components:
+  schemas:
+    LLMExtractionResult:
+      type: object
+      required:
+        - raw_output
+        - provider
+        - model
+        - latency_ms
+        - cost_micros
+        - warnings
+      properties:
+        raw_output:
+          type: string
+          description: Raw JSON string returned by LLM
+        parsed_json:
+          type: object
+          nullable: true
+          description: Parsed extraction output, null if parsing failed
+        provider:
+          type: string
+          example: openai
+        model:
+          type: string
+          example: gpt-4o-mini
+        tokens_in:
+          type: integer
+          nullable: true
+          description: Input tokens (prompt)
+        tokens_out:
+          type: integer
+          nullable: true
+          description: Output tokens (completion)
+        latency_ms:
+          type: integer
+          description: API call duration in milliseconds
+        cost_micros:
+          type: integer
+          format: int64
+          description: Cost in micros (1 EUR = 1,000,000 micros)
+        warnings:
+          type: array
+          items:
+            type: string
+
+    AICallLogEntry:
+      type: object
+      required:
+        - id
+        - org_id
+        - call_type
+        - provider
+        - model
+        - status
+        - latency_ms
+        - cost_micros
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        call_type:
+          type: string
+          enum:
+            - LLM_EXTRACT_PDF_TEXT
+            - LLM_EXTRACT_PDF_VISION
+            - LLM_REPAIR_JSON
+            - LLM_CUSTOMER_HINT
+            - EMBEDDING_GENERATE
+        document_id:
+          type: string
+          format: uuid
+          nullable: true
+        provider:
+          type: string
+        model:
+          type: string
+        tokens_in:
+          type: integer
+          nullable: true
+        tokens_out:
+          type: integer
+          nullable: true
+        latency_ms:
+          type: integer
+        cost_micros:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [SUCCEEDED, FAILED]
+        error_json:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    BudgetCheckResult:
+      type: object
+      required:
+        - allowed
+        - current_usage_micros
+        - budget_micros
+      properties:
+        allowed:
+          type: boolean
+          description: Whether LLM call is allowed under current budget
+        current_usage_micros:
+          type: integer
+          format: int64
+          description: Total cost spent today
+        budget_micros:
+          type: integer
+          format: int64
+          description: Daily budget limit (0 = unlimited)
+        remaining_micros:
+          type: integer
+          format: int64
+          description: Budget remaining for today

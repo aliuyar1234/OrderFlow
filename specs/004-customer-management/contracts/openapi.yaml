@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Customer Management API
+  version: 1.0.0
+  description: Customer and contact management with CSV import
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /customers:
+    get:
+      summary: List customers
+      operationId: listCustomers
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query (name or ERP number)
+        - name: erp_number
+          in: query
+          schema:
+            type: string
+          description: Filter by exact ERP number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerListItem'
+                  next_cursor:
+                    type: string
+                    nullable: true
+
+    post:
+      summary: Create customer (ADMIN/INTEGRATOR)
+      operationId: createCustomer
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Customer with ERP number already exists
+
+  /customers/{customer_id}:
+    get:
+      summary: Get customer by ID
+      operationId: getCustomer
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update customer (ADMIN/INTEGRATOR)
+      operationId: updateCustomer
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '200':
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /customers/{customer_id}/contacts:
+    post:
+      summary: Add contact to customer
+      operationId: createContact
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+      responses:
+        '201':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '409':
+          description: Contact email already exists for this customer
+
+  /customers/{customer_id}/contacts/{contact_id}:
+    delete:
+      summary: Delete contact (ADMIN/INTEGRATOR)
+      operationId: deleteContact
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/ContactId'
+      responses:
+        '204':
+          description: Contact deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /imports/customers:
+    post:
+      summary: Import customers from CSV (ADMIN/INTEGRATOR)
+      operationId: importCustomers
+      tags: [Imports]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported:
+                    type: integer
+                  updated:
+                    type: integer
+                  failed:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row:
+                          type: integer
+                        error:
+                          type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CustomerId:
+      name: customer_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ContactId:
+      name: contact_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        street2:
+          type: string
+        city:
+          type: string
+        postal_code:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 code
+
+    CustomerCreate:
+      type: object
+      required: [name, default_currency, default_language]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 500
+        erp_customer_number:
+          type: string
+          maxLength: 100
+        default_currency:
+          type: string
+          enum: [EUR, USD, CHF, GBP]
+        default_language:
+          type: string
+          enum: [de-DE, en-US, fr-FR, it-IT]
+        billing_address:
+          $ref: '#/components/schemas/Address'
+        shipping_address:
+          $ref: '#/components/schemas/Address'
+        metadata:
+          type: object
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        erp_customer_number:
+          type: string
+        default_currency:
+          type: string
+        default_language:
+          type: string
+        billing_address:
+          $ref: '#/components/schemas/Address'
+        shipping_address:
+          $ref: '#/components/schemas/Address'
+
+    CustomerListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        erp_customer_number:
+          type: string
+        default_currency:
+          type: string
+        contact_count:
+          type: integer
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        erp_customer_number:
+          type: string
+          nullable: true
+        default_currency:
+          type: string
+        default_language:
+          type: string
+        billing_address:
+          $ref: '#/components/schemas/Address'
+        shipping_address:
+          $ref: '#/components/schemas/Address'
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ContactCreate:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        is_primary:
+          type: boolean
+          default: false
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          nullable: true
+        is_primary:
+          type: boolean
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  message:
+                    type: string

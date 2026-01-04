@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: ERP Connector Framework API
+  version: 1.0.0
+
+paths:
+  /connectors/dropzone-json-v1:
+    post:
+      summary: Create or update DROPZONE_JSON_V1 connector
+      operationId: createDropzoneConnector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, export_path]
+              properties:
+                mode:
+                  type: string
+                  enum: [sftp, filesystem]
+                host:
+                  type: string
+                port:
+                  type: integer
+                username:
+                  type: string
+                password:
+                  type: string
+                export_path:
+                  type: string
+                ack_path:
+                  type: string
+                  nullable: true
+                atomic_write:
+                  type: boolean
+                  default: true
+                test_on_save:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Connector created/updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  connector_type:
+                    type: string
+                  status:
+                    type: string
+                  last_test_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  test_result:
+                    type: object
+                    nullable: true
+        '409':
+          description: Conflict - active connector already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+
+  /connectors/dropzone-json-v1/test:
+    post:
+      summary: Test DROPZONE_JSON_V1 connection
+      operationId: testDropzoneConnector
+      responses:
+        '200':
+          description: Test successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  latency_ms:
+                    type: integer
+        '400':
+          description: Test failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error_message:
+                    type: string
+
+  /connectors:
+    get:
+      summary: List connectors for org
+      operationId: listConnectors
+      responses:
+        '200':
+          description: List of connectors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    connector_type:
+                      type: string
+                    status:
+                      type: string
+                    last_test_at:
+                      type: string
+                      format: date-time
+                      nullable: true

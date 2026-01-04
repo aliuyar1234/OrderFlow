@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  title: OrderFlow Matching Engine API
+  description: SKU matching and mapping endpoints
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+
+paths:
+  /drafts/{draft_id}/match:
+    post:
+      summary: Re-run matching for all draft lines
+      operationId: rerunMatching
+      parameters:
+        - name: draft_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Matching completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matched_lines:
+                    type: integer
+                  unmatched_lines:
+                    type: integer
+
+  /drafts/{draft_id}/confirm-mapping:
+    post:
+      summary: Confirm SKU mapping for line
+      operationId: confirmMapping
+      parameters:
+        - name: draft_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmMappingDTO'
+      responses:
+        '200':
+          description: Mapping confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkuMapping'
+
+  /sku-mappings:
+    get:
+      summary: List SKU mappings for customer
+      operationId: listSkuMappings
+      parameters:
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [CONFIRMED, SUGGESTED, REJECTED, DEPRECATED]
+      responses:
+        '200':
+          description: SKU mappings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mappings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SkuMapping'
+
+components:
+  schemas:
+    SkuMapping:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        customer_sku_norm:
+          type: string
+        internal_sku:
+          type: string
+        status:
+          type: string
+          enum: [CONFIRMED, SUGGESTED, REJECTED, DEPRECATED]
+        confidence:
+          type: number
+          format: float
+        support_count:
+          type: integer
+        reject_count:
+          type: integer
+        last_used_at:
+          type: string
+          format: date-time
+
+    ConfirmMappingDTO:
+      type: object
+      required: [line_id, internal_sku]
+      properties:
+        line_id:
+          type: string
+          format: uuid
+        internal_sku:
+          type: string
